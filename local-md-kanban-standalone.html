@@ -691,7 +691,8 @@
       <div class="toolbar-actions">
         <button type="button" id="openButton">打开</button>
         <button type="button" id="importButton">导入</button>
-        <button type="button" id="blankButton">新建</button>
+        <button type="button" id="blankButton">空白看板</button>
+        <button type="button" id="addCardButton" disabled>新建卡片</button>
         <button type="button" class="button-primary" id="saveButton" disabled>
           保存
         </button>
@@ -859,6 +860,7 @@
         openButton: document.getElementById("openButton"),
         importButton: document.getElementById("importButton"),
         blankButton: document.getElementById("blankButton"),
+        addCardButton: document.getElementById("addCardButton"),
         saveButton: document.getElementById("saveButton"),
         downloadButton: document.getElementById("downloadButton"),
         boardViewButton: document.getElementById("boardViewButton"),
@@ -898,6 +900,7 @@
       els.emptyOpenButton.addEventListener("click", openMarkdownFile);
       els.importButton.addEventListener("click", () => els.fileInput.click());
       els.blankButton.addEventListener("click", createBlankBoard);
+      els.addCardButton.addEventListener("click", () => addCard("todo"));
       els.saveButton.addEventListener("click", saveBoard);
       els.downloadButton.addEventListener("click", downloadBoard);
       els.boardViewButton.addEventListener("click", () => setView("board"));
@@ -1249,6 +1252,7 @@
         els.fileName.textContent = openedFile ? openedFile.name : "未打开文件";
         els.saveButton.disabled = !board;
         els.downloadButton.disabled = !board;
+        els.addCardButton.disabled = !board;
         if (!board || !openedFile) {
           els.status.textContent = "未打开文件";
           els.status.classList.remove("dirty");
@@ -1309,12 +1313,6 @@
         } else {
           for (const card of cards) list.appendChild(renderCard(card, false));
         }
-        const addButton = document.createElement("button");
-        addButton.type = "button";
-        addButton.className = "add-card-button";
-        addButton.textContent = "+ 新建卡片";
-        addButton.addEventListener("click", () => addCard(column.id));
-        section.appendChild(addButton);
         return section;
       }
 

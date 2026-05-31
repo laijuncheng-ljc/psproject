@@ -4,8 +4,10 @@ interface ToolbarProps {
   statusMessage: string | null;
   canUseFiles: boolean;
   canSave: boolean;
+  canAddCard: boolean;
   onOpen: () => void;
   onSave: () => void;
+  onAddCard: () => void;
 }
 
 export function Toolbar({
@@ -14,8 +16,10 @@ export function Toolbar({
   statusMessage,
   canUseFiles,
   canSave,
+  canAddCard,
   onOpen,
   onSave,
+  onAddCard,
 }: ToolbarProps) {
   const status = getStatusText(fileName, dirty, statusMessage);
   const statusClass = dirty ? "status status-dirty" : "status";
@@ -29,6 +33,9 @@ export function Toolbar({
       <div className="toolbar-actions">
         <button type="button" onClick={onOpen} disabled={!canUseFiles}>
           打开
+        </button>
+        <button type="button" onClick={onAddCard} disabled={!canAddCard}>
+          新建卡片
         </button>
         <button
           type="button"

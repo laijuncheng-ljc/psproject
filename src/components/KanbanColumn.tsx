@@ -1,17 +1,15 @@
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
-import type { Column, ColumnId } from "../types/board";
+import type { Column } from "../types/board";
 import { KanbanCard } from "./KanbanCard";
 
 interface KanbanColumnProps {
   column: Column;
-  onAddCard: (columnId: ColumnId) => void;
   onCardSelect: (cardId: string) => void;
 }
 
 export function KanbanColumn({
   column,
-  onAddCard,
   onCardSelect,
 }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -42,13 +40,6 @@ export function KanbanColumn({
           )}
         </div>
       </SortableContext>
-      <button
-        type="button"
-        className="add-card-button"
-        onClick={() => onAddCard(column.id)}
-      >
-        + 新建卡片
-      </button>
     </section>
   );
 }

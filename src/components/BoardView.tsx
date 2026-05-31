@@ -18,7 +18,6 @@ import { KanbanColumn } from "./KanbanColumn";
 interface BoardViewProps {
   board: Board;
   onBoardChange: (board: Board) => void;
-  onAddCard: (columnId: ColumnId) => void;
   onCardSelect: (cardId: string) => void;
 }
 
@@ -29,7 +28,6 @@ type DropData =
 export function BoardView({
   board,
   onBoardChange,
-  onAddCard,
   onCardSelect,
 }: BoardViewProps) {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
@@ -116,7 +114,6 @@ export function BoardView({
             <KanbanColumn
               key={column.id}
               column={column}
-              onAddCard={onAddCard}
               onCardSelect={onCardSelect}
             />
           ))}

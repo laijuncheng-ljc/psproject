@@ -22,6 +22,8 @@ import {
 } from "./utils/board";
 import { generateCardId } from "./utils/id";
 
+const DEFAULT_NEW_CARD_COLUMN_ID: ColumnId = "todo";
+
 function App() {
   const [board, setBoard] = useState<Board | null>(null);
   const [openedFile, setOpenedFile] = useState<OpenedMarkdownFile | null>(null);
@@ -139,8 +141,10 @@ function App() {
         statusMessage={statusMessage}
         canUseFiles={canUseFiles}
         canSave={Boolean(board && openedFile)}
+        canAddCard={Boolean(board)}
         onOpen={handleOpen}
         onSave={handleSave}
+        onAddCard={() => handleAddCard(DEFAULT_NEW_CARD_COLUMN_ID)}
       />
       {!canUseFiles ? <ErrorBanner message={UNSUPPORTED_MESSAGE} /> : null}
       {error ? <ErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
@@ -148,7 +152,6 @@ function App() {
         <BoardView
           board={board}
           onBoardChange={markBoardChanged}
-          onAddCard={handleAddCard}
           onCardSelect={setSelectedCardId}
         />
       ) : (
