@@ -46,14 +46,14 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
 
   function commitAndClose() {
     onSave(card.id, {
-      title: title.trim() || "Untitled card",
+      title: title.trim() || "未命名卡片",
       body: serializeTimeManagementSection(body, items),
     });
     onClose();
   }
 
   function handleDelete() {
-    if (window.confirm("Delete this card?")) {
+    if (window.confirm("删除这张卡片？")) {
       onDelete(card.id);
     }
   }
@@ -101,24 +101,24 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
   }
 
   return (
-    <aside className="card-editor" aria-label="Card editor">
+    <aside className="card-editor" aria-label="卡片编辑器">
       <div className="editor-header">
-        <h2>Edit card</h2>
+        <h2>编辑卡片</h2>
         <button type="button" className="icon-button" onClick={commitAndClose}>
-          Close
+          关闭
         </button>
       </div>
       <label>
-        <span>Title</span>
+        <span>标题</span>
         <input value={title} onChange={(event) => setTitle(event.target.value)} />
       </label>
       <label className="editor-body-field">
-        <span>Body</span>
+        <span>正文</span>
         <textarea value={body} onChange={(event) => setBody(event.target.value)} />
       </label>
       <section className="time-management-panel">
         <div className="time-management-header">
-          <h3>Time Management</h3>
+          <h3>时间管理</h3>
           <span>
             {completedCount}/{items.length}
           </span>
@@ -135,25 +135,25 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
               />
             ))
           ) : (
-            <p className="time-management-empty">No subitems</p>
+            <p className="time-management-empty">暂无子项目</p>
           )}
         </div>
         <form className="time-management-add" onSubmit={handleAddItem}>
           <input
             value={newItemTitle}
             onChange={(event) => setNewItemTitle(event.target.value)}
-            placeholder="Add subitem"
-            aria-label="Add subitem"
+            placeholder="添加子项目"
+            aria-label="添加子项目"
           />
-          <button type="submit">Add</button>
+          <button type="submit">添加</button>
         </form>
       </section>
       <div className="editor-actions">
         <button type="button" className="button-danger" onClick={handleDelete}>
-          Delete
+          删除
         </button>
         <button type="button" className="button-primary" onClick={commitAndClose}>
-          Done
+          完成
         </button>
       </div>
     </aside>
@@ -179,16 +179,16 @@ function TimeManagementRow({
         type="checkbox"
         checked={item.completed}
         onChange={(event) => onToggle(item.id, event.target.checked)}
-        aria-label={`Toggle ${item.title}`}
+        aria-label={`切换 ${item.title}`}
       />
       <div className="time-management-item-main">
         <input
           value={item.title}
           onChange={(event) => onTitleChange(item.id, event.target.value)}
-          aria-label="Subitem title"
+          aria-label="子项目标题"
         />
         {item.completedAt ? (
-          <span className="completion-time">Completed {item.completedAt}</span>
+          <span className="completion-time">完成于 {item.completedAt}</span>
         ) : null}
       </div>
       <button
@@ -196,7 +196,7 @@ function TimeManagementRow({
         className="time-management-remove"
         onClick={() => onRemove(item.id)}
       >
-        Remove
+        移除
       </button>
     </div>
   );

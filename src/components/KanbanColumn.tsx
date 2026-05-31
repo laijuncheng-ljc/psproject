@@ -38,7 +38,7 @@ export function KanbanColumn({
               <KanbanCard key={card.id} card={card} onSelect={onCardSelect} />
             ))
           ) : (
-            <div className="column-empty">No cards</div>
+            <div className="column-empty">暂无卡片</div>
           )}
         </div>
       </SortableContext>
@@ -47,7 +47,7 @@ export function KanbanColumn({
         className="add-card-button"
         onClick={() => onAddCard(column.id)}
       >
-        + Add card
+        + 新建卡片
       </button>
     </section>
   );

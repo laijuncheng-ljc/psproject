@@ -21,7 +21,7 @@ export function serializeBoardMarkdown(board: Board): string {
 }
 
 function serializeCard(card: Card): string {
-  const title = sanitizeHeading(card.title, "Untitled card");
+  const title = sanitizeHeading(card.title, "未命名卡片");
   const id = card.id.trim() || generateCardId();
   const body = trimTrailingBlankLines(card.body);
   const header = `### ${title}\n<!-- id: ${id} -->`;

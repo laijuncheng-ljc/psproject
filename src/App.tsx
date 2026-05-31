@@ -54,13 +54,13 @@ function App() {
       setBoard(parsedBoard);
       setDirty(false);
       setSelectedCardId(null);
-      setStatusMessage("Saved");
+      setStatusMessage("已保存");
     } catch (caughtError) {
       if (isAbortError(caughtError)) {
         return;
       }
 
-      setError(toErrorMessage(caughtError, "Failed to open Markdown file."));
+      setError(toErrorMessage(caughtError, "打开 Markdown 文件失败。"));
     }
   }, []);
 
@@ -68,21 +68,21 @@ function App() {
     setError(null);
 
     if (!board) {
-      setError("No board to save.");
+      setError("没有可保存的看板。");
       return;
     }
 
     if (!openedFile) {
-      setError("No file opened.");
+      setError("还没有打开文件。");
       return;
     }
 
     try {
       await saveMarkdownFile(openedFile.handle, serializeBoardMarkdown(board));
       setDirty(false);
-      setStatusMessage("Saved");
+      setStatusMessage("已保存");
     } catch (caughtError) {
-      setError(toErrorMessage(caughtError, "Failed to save Markdown file."));
+      setError(toErrorMessage(caughtError, "保存 Markdown 文件失败。"));
     }
   }, [board, openedFile]);
 
@@ -105,7 +105,7 @@ function App() {
 
     const newCard: Card = {
       id: generateCardId(),
-      title: "Untitled card",
+      title: "未命名卡片",
       body: "",
       columnId,
     };

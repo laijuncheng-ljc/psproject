@@ -10,7 +10,7 @@ export interface ParsedTimeManagement {
   items: TimeManagementItem[];
 }
 
-const SECTION_TITLE = "Time Management";
+const SECTION_TITLE = "时间管理";
 const SECTION_HEADING = `#### ${SECTION_TITLE}`;
 const TASK_PATTERN =
   /^(\s*)[-*]\s+\[([ xX])\]\s+(.*?)(?:\s+<!--\s*completed_at:\s*(.*?)\s*-->)?\s*$/;

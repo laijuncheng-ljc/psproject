@@ -8,8 +8,11 @@ import { generateCardId } from "../utils/id";
 
 const COLUMN_TITLE_TO_ID: Record<string, ColumnId> = {
   todo: "todo",
+  待办: "todo",
   doing: "doing",
+  "进行中": "doing",
   done: "done",
+  "已完成": "done",
 };
 
 const ID_COMMENT_PATTERN = /^<!--\s*id:\s*(.+?)\s*-->$/;
@@ -75,7 +78,7 @@ export function parseBoardMarkdown(markdown: string): Board {
 
       if (cardTitleMatch && currentColumnId) {
         flushCurrentCard();
-        currentCardTitle = cardTitleMatch[1].trim() || "Untitled card";
+        currentCardTitle = cardTitleMatch[1].trim() || "未命名卡片";
         currentCardBodyLines = [];
         continue;
       }

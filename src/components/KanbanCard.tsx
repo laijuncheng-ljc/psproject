@@ -47,11 +47,11 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       {preview ? (
         <span className="card-preview">{preview}</span>
       ) : (
-        <span className="card-preview card-preview-empty">No body</span>
+        <span className="card-preview card-preview-empty">无正文</span>
       )}
       {timeManagement.items.length > 0 ? (
         <span className="subitem-progress">
-          {completedCount}/{timeManagement.items.length} subitems
+          {completedCount}/{timeManagement.items.length} 子项目
         </span>
       ) : null}
     </button>

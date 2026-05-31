@@ -1,125 +1,105 @@
-# Local MD Kanban
+# 本地 MD 看板
 
-A personal Trello-like Kanban board powered by one local Markdown file.
+一个只用本地 Markdown 文件管理任务的个人看板工具。
 
-## Features
+## 功能
 
-- Open a local Markdown file
-- Parse Markdown into Todo / Doing / Done columns
-- Drag and drop cards
-- Add, edit, and delete cards
-- Save changes back to the same Markdown file
-- No backend
-- No database
-- No account
+- 打开一个本地 Markdown 文件
+- 自动解析为“待办 / 进行中 / 已完成”三列
+- 拖拽卡片调整顺序或状态
+- 新建、编辑、删除卡片
+- 给卡片设置标签、优先级和归档状态
+- 在卡片里管理“时间管理”子项目，并在勾选完成时记录本地时间戳
+- 保存回同一个 Markdown 文件
+- 没有后端、数据库、账号系统或 GitHub 同步
 
-## Browser Support
+## 推荐用法
 
-This app requires Chrome or Edge desktop because it uses the File System Access API.
-
-The Codex in-app browser may show the page, but it usually cannot grant the local file permissions needed to open and write back to the same Markdown file. Open the local dev URL in Chrome or Edge desktop for the full workflow.
-
-If the browser does not support local file read/write, the app shows:
+最简单的用法是直接打开项目根目录里的：
 
 ```txt
-当前浏览器不支持本地文件读写。请使用 Chrome 或 Edge 桌面版。
+local-md-kanban-standalone.html
 ```
 
-## Markdown Format
+如果浏览器允许本地写入，可以点“打开”直接读取并保存原文件。如果浏览器阻止本地写入，就用“导入”读取 Markdown，修改后点“下载”得到更新后的文件。
 
-Create a `board.md` file like this:
+## 浏览器支持
+
+完整的“打开并写回同一个文件”流程需要 Chrome 或 Edge 桌面版，因为它依赖 File System Access API。Codex 内置浏览器通常不能授权写回本地文件。
+
+## Markdown 格式
+
+示例 `board.md`：
 
 ```md
-# Personal Board
+# 个人看板
 
-## Todo
+## 待办
 
-### 写 Markdown parser
+### 写 Markdown 解析器
 <!-- id: card-example-001 -->
+<!-- priority: high -->
+<!-- tags: 解析器, MVP -->
 
 把本地 Markdown 文件解析成看板数据。
 
-#### Time Management
+#### 时间管理
 
-- [x] 识别 Todo / Doing / Done 三列 <!-- completed_at: 2026-05-31T09:18:42+08:00 -->
+- [x] 识别三列结构 <!-- completed_at: 2026-05-31T09:18:42+08:00 -->
 - [ ] 支持缺失 ID 的卡片
-- [ ] 验证代码块中的标题不会误解析
+- [ ] 验证代码块中的标题不会被误解析
 
-### 实现卡片编辑
-<!-- id: card-example-002 -->
-
-支持编辑标题和正文。
-
-## Doing
+## 进行中
 
 ### 实现拖拽
-<!-- id: card-example-003 -->
+<!-- id: card-example-002 -->
+<!-- priority: medium -->
+<!-- tags: 交互 -->
 
 支持同列排序和跨列移动。
 
-## Done
+## 已完成
 
 ### 确定 MVP 范围
-<!-- id: card-example-004 -->
+<!-- id: card-example-003 -->
+<!-- priority: low -->
 
-只做本地 Markdown 文件驱动的个人 Kanban。
+只做本地 Markdown 文件驱动的个人看板。
+
+## 归档
 ```
 
-The parser expects one board title, fixed `Todo`, `Doing`, and `Done` columns, and cards represented by `###` headings. Missing card IDs are generated automatically, and missing columns are added when the board is saved.
+每张卡片用 `###` 标题表示。卡片 ID 写在 `<!-- id: ... -->` 里；如果缺少 ID，程序会自动生成。保存时会统一输出中文栏目标题。
 
-Each card can also include a `#### Time Management` section. The app renders those lines as checkbox subitems in the card editor:
+可选元数据：
 
 ```md
 <!-- priority: high -->
-<!-- tags: parser, mvp -->
-
-#### Time Management
-
-- [x] subitem 1 <!-- completed_at: 2026-05-31T09:18:42+08:00 -->
-- [ ] subitem 2
-```
-
-Checking a subitem writes the current local timestamp into `completed_at`. Unchecking it removes that timestamp.
-
-The standalone app also supports these optional card metadata comments:
-
-```md
-<!-- priority: high -->
-<!-- tags: parser, mvp -->
+<!-- tags: 解析器, MVP -->
 <!-- column: todo -->
 <!-- archived_at: 2026-05-31T10:30:00+08:00 -->
 ```
 
-- `priority` can be `high`, `medium`, or `low`.
-- `tags` is a comma-separated list.
-- `column` is used when an archived card is restored.
-- `archived_at` is written automatically when a card is archived.
-- Archived cards are stored under `## Archived` in the same Markdown file.
+- `priority` 使用 `high`、`medium`、`low` 三个机器值，界面显示为高、中、低。
+- `tags` 是逗号分隔的标签。
+- `column` 用于归档卡片恢复时回到原列。
+- `archived_at` 会在归档时自动写入。
+- 归档卡片保存在同一个文件的 `## 归档` 下。
 
-## Development
+## 开发
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Standalone HTML
-
-If you do not want to run a dev server, open this file directly in Chrome or Edge:
-
-```txt
-local-md-kanban-standalone.html
-```
-
-This standalone file contains its own HTML, CSS, and JavaScript. Use `Open` when the browser allows direct local file access. If direct file access is blocked, use `Import` to load a Markdown file and `Download` to save the updated Markdown.
-
-## Test
+## 测试
 
 ```bash
 npm run test
 ```
 
-## Build
+## 构建
 
 ```bash
 npm run build

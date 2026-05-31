@@ -7,7 +7,7 @@ export interface OpenedMarkdownFile {
 const UNSUPPORTED_MESSAGE =
   "当前浏览器不支持本地文件读写。请使用 Chrome 或 Edge 桌面版。";
 const BLOCKED_CONTEXT_MESSAGE =
-  "当前浏览器阻止了本地文件访问。请在 Chrome 或 Edge 桌面版中打开 http://127.0.0.1:5173/ 后再选择 .md 文件；Codex 内置浏览器通常不能写回本地文件。";
+  "当前环境阻止了本地文件访问。请在 Chrome 或 Edge 桌面版中打开页面后再选择 .md 文件；如果仍然受限，请使用独立 HTML 版的导入和下载流程。";
 
 export function supportsLocalMarkdownFiles(): boolean {
   return typeof window !== "undefined" && "showOpenFilePicker" in window;
@@ -23,7 +23,7 @@ export async function openMarkdownFile(): Promise<OpenedMarkdownFile> {
       multiple: false,
       types: [
         {
-          description: "Markdown files",
+          description: "Markdown 文件",
           accept: {
             "text/markdown": [".md", ".markdown"],
             "text/plain": [".md"],

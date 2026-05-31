@@ -23,12 +23,12 @@ export function Toolbar({
   return (
     <header className="toolbar">
       <div className="toolbar-title">
-        <h1>Local MD Kanban</h1>
-        <span className="file-name">{fileName ?? "No file opened"}</span>
+        <h1>本地 MD 看板</h1>
+        <span className="file-name">{fileName ?? "未打开文件"}</span>
       </div>
       <div className="toolbar-actions">
         <button type="button" onClick={onOpen} disabled={!canUseFiles}>
-          Open
+          打开
         </button>
         <button
           type="button"
@@ -36,7 +36,7 @@ export function Toolbar({
           onClick={onSave}
           disabled={!canSave}
         >
-          Save
+          保存
         </button>
         <span className={statusClass}>{status}</span>
       </div>
@@ -50,12 +50,12 @@ function getStatusText(
   statusMessage: string | null,
 ): string {
   if (!fileName) {
-    return "No file opened";
+    return "未打开文件";
   }
 
   if (dirty) {
-    return "Unsaved changes";
+    return "未保存";
   }
 
-  return statusMessage ?? "Saved";
+  return statusMessage ?? "已保存";
 }

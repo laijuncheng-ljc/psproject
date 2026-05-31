@@ -3,9 +3,9 @@ import { moveCard } from "../utils/board";
 import { parseBoardMarkdown } from "./parseBoardMarkdown";
 import { serializeBoardMarkdown } from "./serializeBoardMarkdown";
 
-const sampleBoard = `# Personal Board
+const sampleBoard = `# 个人看板
 
-## Todo
+## 待办
 
 ### 实现拖拽排序
 <!-- id: card-20260531-001 -->
@@ -17,26 +17,25 @@ const sampleBoard = `# Personal Board
 
 把 board.md 解析成 columns 和 cards。
 
-## Doing
+## 进行中
 
 ### 搭建 Vite 项目
 <!-- id: card-20260531-003 -->
 
 初始化 React + TypeScript 项目。
 
-## Done
+## 已完成
 
 ### 确定 MVP 范围
 <!-- id: card-20260531-004 -->
 
-只做本地 Markdown Kanban。
-`;
+只做本地 Markdown 看板。`;
 
 describe("Markdown board parser and serializer", () => {
-  it("parses a normal board.md file", () => {
+  it("parses a normal board.md file with Chinese column headings", () => {
     const board = parseBoardMarkdown(sampleBoard);
 
-    expect(board.title).toBe("Personal Board");
+    expect(board.title).toBe("个人看板");
     expect(board.columns).toHaveLength(3);
     expect(board.columns[0].cards).toHaveLength(2);
     expect(board.columns[0].cards[0]).toMatchObject({
@@ -51,16 +50,16 @@ describe("Markdown board parser and serializer", () => {
   it("creates the default board for an empty file", () => {
     const board = parseBoardMarkdown("");
 
-    expect(board.title).toBe("Personal Board");
+    expect(board.title).toBe("个人看板");
     expect(board.columns.map((column) => column.title)).toEqual([
-      "Todo",
-      "Doing",
-      "Done",
+      "待办",
+      "进行中",
+      "已完成",
     ]);
     expect(board.columns.every((column) => column.cards.length === 0)).toBe(true);
   });
 
-  it("generates an id when a card is missing one", () => {
+  it("keeps compatibility with old English column headings", () => {
     const board = parseBoardMarkdown(`# Personal Board
 
 ## Todo
@@ -80,6 +79,9 @@ Body without an id comment.
     const serialized = serializeBoardMarkdown(firstParse);
     const secondParse = parseBoardMarkdown(serialized);
 
+    expect(serialized).toContain("## 待办");
+    expect(serialized).toContain("## 进行中");
+    expect(serialized).toContain("## 已完成");
     expect(secondParse.columns.map((column) => column.cards.length)).toEqual([2, 1, 1]);
     expect(secondParse.columns[0].cards.map((card) => card.title)).toEqual([
       "实现拖拽排序",
@@ -88,28 +90,26 @@ Body without an id comment.
   });
 
   it("does not parse headings inside fenced code blocks as cards or columns", () => {
-    const board = parseBoardMarkdown(`# Personal Board
+    const board = parseBoardMarkdown(`# 个人看板
 
-## Todo
+## 待办
 
-### Code sample
+### 代码示例
 <!-- id: card-code -->
 
 \`\`\`js
-### This is not a card title
-## This is not a column
+### 这不是卡片标题
+## 这不是列标题
 \`\`\`
 
-Still the same card.
+仍然属于同一张卡片。
 
-## Done
+## 已完成
 `);
 
     expect(board.columns[0].cards).toHaveLength(1);
-    expect(board.columns[0].cards[0].body).toContain(
-      "### This is not a card title",
-    );
-    expect(board.columns[0].cards[0].body).toContain("Still the same card.");
+    expect(board.columns[0].cards[0].body).toContain("### 这不是卡片标题");
+    expect(board.columns[0].cards[0].body).toContain("仍然属于同一张卡片。");
     expect(board.columns[2].cards).toHaveLength(0);
   });
 

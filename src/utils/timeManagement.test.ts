@@ -46,7 +46,7 @@ describe("time management helpers", () => {
 
     expect(markdown).toBe(`Normal card notes.
 
-#### Time Management
+#### 时间管理
 
 - [x] subitem 1 <!-- completed_at: 2026-05-31T09:18:42+08:00 -->
 - [ ] subitem 2`);

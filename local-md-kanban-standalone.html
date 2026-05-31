@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Local MD Kanban Standalone</title>
+    <title>本地 MD 看板</title>
     <style>
       :root {
         --bg: #f5f7fb;
@@ -684,27 +684,27 @@
       <div class="brand">
         <div class="brand-mark">MD</div>
         <div>
-          <h1>Local MD Kanban</h1>
-          <span class="file-name" id="fileName">No file opened</span>
+          <h1>本地 MD 看板</h1>
+          <span class="file-name" id="fileName">未打开文件</span>
         </div>
       </div>
       <div class="toolbar-actions">
-        <button type="button" id="openButton">Open</button>
-        <button type="button" id="importButton">Import</button>
-        <button type="button" id="blankButton">Blank</button>
+        <button type="button" id="openButton">打开</button>
+        <button type="button" id="importButton">导入</button>
+        <button type="button" id="blankButton">新建</button>
         <button type="button" class="button-primary" id="saveButton" disabled>
-          Save
+          保存
         </button>
-        <button type="button" id="downloadButton" disabled>Download</button>
+        <button type="button" id="downloadButton" disabled>下载</button>
         <div class="view-toggle">
           <button type="button" class="view-button active" id="boardViewButton">
-            Board View
+            看板
           </button>
           <button type="button" class="view-button" id="archiveViewButton">
-            Archive View
+            归档
           </button>
         </div>
-        <span class="status" id="status">No file opened</span>
+        <span class="status" id="status">未打开文件</span>
       </div>
     </header>
 
@@ -713,45 +713,45 @@
 
     <section class="empty-state" id="emptyState">
       <div class="empty-panel">
-        <h2>Local MD Kanban</h2>
+        <h2>本地 MD 看板</h2>
         <p>
-          Open this HTML file directly. Use Open when your browser allows local
-          write access, or Import and Download for the safest no-server flow.
+          直接打开这个 HTML 文件即可使用。浏览器允许本地写入时用“打开”，
+          更稳妥的无服务流程是“导入”后再“下载”保存。
         </p>
         <button type="button" class="button-primary" id="emptyOpenButton">
-          Open Markdown File
+          打开 Markdown 文件
         </button>
       </div>
     </section>
 
     <main class="app-grid" id="appGrid">
       <aside class="filters">
-        <h2>Filters</h2>
+        <h2>筛选</h2>
         <div class="filter-group">
-          <label for="searchInput">Search</label>
-          <input id="searchInput" placeholder="Search cards..." />
+          <label for="searchInput">搜索</label>
+          <input id="searchInput" placeholder="搜索卡片..." />
         </div>
         <div class="filter-group">
-          <label for="priorityFilter">Priority</label>
+          <label for="priorityFilter">优先级</label>
           <select id="priorityFilter">
-            <option value="">All priorities</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="">全部优先级</option>
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
           </select>
         </div>
         <div class="filter-group">
-          <label for="tagFilter">Tags</label>
+          <label for="tagFilter">标签</label>
           <select id="tagFilter">
-            <option value="">All tags</option>
+            <option value="">全部标签</option>
           </select>
         </div>
         <div class="stat-box">
-          <span>Total active</span>
+          <span>活跃卡片</span>
           <strong id="activeCount">0</strong>
         </div>
         <div class="stat-box">
-          <span>Archived</span>
+          <span>归档卡片</span>
           <strong id="archiveCount">0</strong>
         </div>
       </aside>
@@ -762,79 +762,84 @@
 
       <section class="archive-area" id="archiveArea">
         <div class="archive-header">
-          <h2>Archived cards</h2>
-          <span class="status" id="archiveSummary">0 cards</span>
+          <h2>归档卡片</h2>
+          <span class="status" id="archiveSummary">0 张卡片</span>
         </div>
         <div class="archive-list" id="archiveList"></div>
       </section>
     </main>
 
-    <aside class="editor" id="editor" aria-label="Card editor">
+    <aside class="editor" id="editor" aria-label="卡片编辑器">
       <div class="editor-header">
         <div>
-          <h2>Edit card</h2>
+          <h2>编辑卡片</h2>
           <div class="meta-line" id="editorMeta"></div>
         </div>
-        <button type="button" id="closeEditorButton">Close</button>
+        <button type="button" id="closeEditorButton">关闭</button>
       </div>
 
       <label>
-        <span>Title</span>
+        <span>标题</span>
         <input id="editorTitle" />
       </label>
 
       <div class="field-row">
         <label>
-          <span>Priority</span>
+          <span>优先级</span>
           <select id="editorPriority">
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
           </select>
         </label>
         <label>
-          <span>Tags</span>
-          <input id="editorTags" placeholder="feature, docs" />
+          <span>标签</span>
+          <input id="editorTags" placeholder="功能, 文档" />
         </label>
       </div>
 
       <label>
-        <span>Body</span>
+        <span>正文</span>
         <textarea id="editorBody"></textarea>
       </label>
 
       <section class="tm-panel">
         <div class="tm-header">
-          <h3>Time Management</h3>
+          <h3>时间管理</h3>
           <span class="tm-count" id="tmCount">0/0</span>
         </div>
         <div class="tm-list" id="tmList"></div>
         <form class="tm-add" id="tmAddForm">
-          <input id="tmNewTitle" placeholder="Add subitem" aria-label="Add subitem" />
-          <button type="submit">Add</button>
+          <input id="tmNewTitle" placeholder="添加子项目" aria-label="添加子项目" />
+          <button type="submit">添加</button>
         </form>
       </section>
 
       <div class="editor-actions">
-        <button type="button" id="archiveCardButton">Archive</button>
+        <button type="button" id="archiveCardButton">归档</button>
         <button type="button" class="button-danger" id="deleteCardButton">
-          Delete
+          删除
         </button>
         <button type="button" class="button-primary" id="doneEditorButton">
-          Done
+          完成
         </button>
       </div>
     </aside>
 
     <script>
       const DEFAULT_COLUMNS = [
-        { id: "todo", title: "Todo" },
-        { id: "doing", title: "Doing" },
-        { id: "done", title: "Done" },
+        { id: "todo", title: "待办" },
+        { id: "doing", title: "进行中" },
+        { id: "done", title: "已完成" },
       ];
-      const DEFAULT_BOARD_TITLE = "Personal Board";
+      const DEFAULT_BOARD_TITLE = "个人看板";
       const DEFAULT_PRIORITY = "medium";
       const PRIORITIES = new Set(["high", "medium", "low"]);
+      const PRIORITY_LABELS = {
+        high: "高",
+        medium: "中",
+        low: "低",
+      };
       const ID_COMMENT_PATTERN = /^<!--\s*id:\s*(.+?)\s*-->$/;
       const META_COMMENT_PATTERN = /^<!--\s*([a-z_]+):\s*(.*?)\s*-->$/i;
       const TASK_PATTERN =
@@ -918,7 +923,7 @@
       async function openMarkdownFile() {
         clearError();
         if (!window.showOpenFilePicker) {
-          showError("Direct file write is unavailable here. Use Import, then Download.");
+          showError("当前环境不能直接写入本地文件。请使用“导入”，修改后再“下载”。");
           els.fileInput.click();
           return;
         }
@@ -928,7 +933,7 @@
             multiple: false,
             types: [
               {
-                description: "Markdown files",
+                description: "Markdown 文件",
                 accept: {
                   "text/markdown": [".md", ".markdown"],
                   "text/plain": [".md"],
@@ -946,7 +951,7 @@
           render();
         } catch (error) {
           if (error && error.name === "AbortError") return;
-          showError("Local file access was blocked. Use Import, then Download.");
+          showError("本地文件访问被阻止。请使用“导入”，修改后再“下载”。");
         }
       }
 
@@ -965,7 +970,7 @@
           dirty = false;
           render();
         } catch {
-          showError("Failed to read the Markdown file.");
+          showError("读取 Markdown 文件失败。");
         }
       }
 
@@ -985,7 +990,7 @@
       async function saveBoard() {
         clearError();
         if (!board) {
-          showError("No board to save.");
+          showError("没有可保存的看板。");
           return;
         }
         if (!openedFile || !openedFile.handle) {
@@ -999,7 +1004,7 @@
           dirty = false;
           renderStatus();
         } catch {
-          showError("Save failed. Your changes remain in the page; use Download.");
+          showError("保存失败。你的修改仍保留在页面中，可以继续尝试保存或使用“下载”。");
         }
       }
 
@@ -1049,7 +1054,7 @@
           const parsed = extractCardMetadataAndBody(currentBodyLines);
           const card = {
             id: parsed.id || generateCardId(),
-            title: currentTitle || "Untitled card",
+            title: currentTitle || "未命名卡片",
             body: parsed.body,
             columnId: parsed.columnId || currentColumnId || "todo",
             priority: normalizePriority(parsed.priority),
@@ -1081,7 +1086,7 @@
             if (columnMatch) {
               flushCard();
               const heading = columnMatch[1].trim().toLowerCase();
-              inArchive = heading === "archived" || heading === "archive";
+              inArchive = ["archived", "archive", "归档"].includes(heading);
               currentColumnId = inArchive ? null : columnTitleToId(heading);
               continue;
             }
@@ -1089,7 +1094,7 @@
             const cardMatch = /^###\s+(.+?)\s*$/.exec(line);
             if (cardMatch && (currentColumnId || inArchive)) {
               flushCard();
-              currentTitle = cardMatch[1].trim() || "Untitled card";
+              currentTitle = cardMatch[1].trim() || "未命名卡片";
               currentBodyLines = [];
               continue;
             }
@@ -1110,7 +1115,7 @@
           const cards = column ? column.cards : [];
           sections.push(serializeCardSection(columnConfig.title, cards, false));
         }
-        sections.push(serializeCardSection("Archived", currentBoard.archivedCards, true));
+        sections.push(serializeCardSection("归档", currentBoard.archivedCards, true));
         return `${sections.join("\n\n")}\n`;
       }
 
@@ -1123,7 +1128,7 @@
 
       function serializeCard(card, archived) {
         const lines = [
-          `### ${sanitizeHeading(card.title, "Untitled card")}`,
+          `### ${sanitizeHeading(card.title, "未命名卡片")}`,
           `<!-- id: ${card.id.trim() || generateCardId()} -->`,
           `<!-- priority: ${normalizePriority(card.priority)} -->`,
         ];
@@ -1211,7 +1216,7 @@
               : "";
           return `- [${item.completed ? "x" : " "}] ${item.title.trim()}${timestamp}`;
         });
-        const section = `#### Time Management\n\n${taskLines.join("\n")}`;
+        const section = `#### 时间管理\n\n${taskLines.join("\n")}`;
         return cleanBody ? `${cleanBody}\n\n${section}` : section;
       }
 
@@ -1241,17 +1246,17 @@
       }
 
       function renderStatus() {
-        els.fileName.textContent = openedFile ? openedFile.name : "No file opened";
+        els.fileName.textContent = openedFile ? openedFile.name : "未打开文件";
         els.saveButton.disabled = !board;
         els.downloadButton.disabled = !board;
         if (!board || !openedFile) {
-          els.status.textContent = "No file opened";
+          els.status.textContent = "未打开文件";
           els.status.classList.remove("dirty");
         } else if (dirty) {
-          els.status.textContent = "Unsaved changes";
+          els.status.textContent = "未保存";
           els.status.classList.add("dirty");
         } else {
-          els.status.textContent = "Saved";
+          els.status.textContent = "已保存";
           els.status.classList.remove("dirty");
         }
       }
@@ -1264,7 +1269,7 @@
         const currentTag = els.tagFilter.value;
         const tags = [...new Set(allCards.flatMap((card) => card.tags))].sort();
         els.tagFilter.innerHTML =
-          '<option value="">All tags</option>' +
+          '<option value="">全部标签</option>' +
           tags.map((tag) => `<option value="${escapeAttribute(tag)}">${escapeHtml(tag)}</option>`).join("");
         if (tags.includes(currentTag)) els.tagFilter.value = currentTag;
       }
@@ -1299,7 +1304,7 @@
         if (cards.length === 0) {
           const empty = document.createElement("div");
           empty.className = "empty-column";
-          empty.textContent = "No cards";
+          empty.textContent = "暂无卡片";
           list.appendChild(empty);
         } else {
           for (const card of cards) list.appendChild(renderCard(card, false));
@@ -1307,7 +1312,7 @@
         const addButton = document.createElement("button");
         addButton.type = "button";
         addButton.className = "add-card-button";
-        addButton.textContent = "+ Add card";
+        addButton.textContent = "+ 新建卡片";
         addButton.addEventListener("click", () => addCard(column.id));
         section.appendChild(addButton);
         return section;
@@ -1315,12 +1320,12 @@
 
       function renderArchiveList() {
         const cards = board.archivedCards.filter(matchesFilters);
-        els.archiveSummary.textContent = `${cards.length} cards`;
+        els.archiveSummary.textContent = `${cards.length} 张卡片`;
         els.archiveList.innerHTML = "";
         if (cards.length === 0) {
           const empty = document.createElement("div");
           empty.className = "empty-column";
-          empty.textContent = "No archived cards";
+          empty.textContent = "暂无归档卡片";
           els.archiveList.appendChild(empty);
           return;
         }
@@ -1371,13 +1376,13 @@
             <span class="card-title">${escapeHtml(card.title)}</span>
             ${priorityPill(card.priority)}
           </div>
-          <div class="card-preview">${escapeHtml(preview || "No body")}</div>
+          <div class="card-preview">${escapeHtml(preview || "无正文")}</div>
           <div class="tag-list">${renderTagChips(card.tags)}</div>
           <div class="card-footer">
-            ${total ? progressMarkup(completed, total) : '<span class="pill progress-pill">0/0 subitems</span>'}
-            <button type="button" class="icon-action">${archived ? "Restore" : "Archive"}</button>
+            ${total ? progressMarkup(completed, total) : '<span class="pill progress-pill">0/0 子项目</span>'}
+            <button type="button" class="icon-action">${archived ? "恢复" : "归档"}</button>
           </div>
-          ${archived && card.archivedAt ? `<span class="pill archived-pill">Archived ${escapeHtml(card.archivedAt)}</span>` : ""}
+          ${archived && card.archivedAt ? `<span class="pill archived-pill">归档于 ${escapeHtml(card.archivedAt)}</span>` : ""}
         `;
         cardEl.querySelector(".icon-action").addEventListener("click", (event) => {
           event.stopPropagation();
@@ -1400,12 +1405,12 @@
         }
         const parsed = parseTimeManagement(card.body);
         els.editor.classList.add("show");
-        els.editorMeta.textContent = `${card.id}${selectedArchived && card.archivedAt ? ` | Archived ${card.archivedAt}` : ""}`;
+        els.editorMeta.textContent = `${card.id}${selectedArchived && card.archivedAt ? ` | 归档于 ${card.archivedAt}` : ""}`;
         els.editorTitle.value = card.title;
         els.editorPriority.value = normalizePriority(card.priority);
         els.editorTags.value = card.tags.join(", ");
         els.editorBody.value = parsed.body;
-        els.archiveCardButton.textContent = selectedArchived ? "Restore" : "Archive";
+        els.archiveCardButton.textContent = selectedArchived ? "恢复" : "归档";
         renderTimeItems(parsed.items);
       }
 
@@ -1416,7 +1421,7 @@
         if (items.length === 0) {
           const empty = document.createElement("div");
           empty.className = "empty-column";
-          empty.textContent = "No subitems";
+          empty.textContent = "暂无子项目";
           els.tmList.appendChild(empty);
           return;
         }
@@ -1425,12 +1430,12 @@
           row.className = "tm-row";
           row.dataset.itemId = item.id;
           row.innerHTML = `
-            <input type="checkbox" ${item.completed ? "checked" : ""} aria-label="Toggle ${escapeHtml(item.title)}" />
+            <input type="checkbox" ${item.completed ? "checked" : ""} aria-label="切换 ${escapeHtml(item.title)}" />
             <div class="tm-main">
-              <input value="${escapeAttribute(item.title)}" aria-label="Subitem title" />
-              ${item.completedAt ? `<span class="completed-at">Completed ${escapeHtml(item.completedAt)}</span>` : ""}
+              <input value="${escapeAttribute(item.title)}" aria-label="子项目标题" />
+              ${item.completedAt ? `<span class="completed-at">完成于 ${escapeHtml(item.completedAt)}</span>` : ""}
             </div>
-            <button type="button">Remove</button>
+            <button type="button">移除</button>
           `;
           row.querySelector('input[type="checkbox"]').addEventListener("change", (event) => {
             updateTimeItem(item.id, {
@@ -1452,7 +1457,7 @@
           title: row.querySelector(".tm-main input").value,
           completed: row.querySelector('input[type="checkbox"]').checked,
           completedAt: row.querySelector(".completed-at")
-            ? row.querySelector(".completed-at").textContent.replace(/^Completed\s+/, "")
+            ? row.querySelector(".completed-at").textContent.replace(/^完成于\s+/, "")
             : null,
         }));
       }
@@ -1486,7 +1491,7 @@
         if (!board || !selectedCardId) return;
         const card = selectedArchived ? getArchivedCardById(selectedCardId) : getCardById(selectedCardId);
         if (!card) return;
-        card.title = els.editorTitle.value.trim() || "Untitled card";
+        card.title = els.editorTitle.value.trim() || "未命名卡片";
         card.priority = normalizePriority(els.editorPriority.value);
         card.tags = parseTags(els.editorTags.value);
         card.body = serializeTimeManagement(els.editorBody.value, getEditorItems());
@@ -1529,7 +1534,7 @@
 
       function deleteSelectedCard() {
         if (!board || !selectedCardId) return;
-        if (!window.confirm("Delete this card?")) return;
+        if (!window.confirm("删除这张卡片？")) return;
         if (selectedArchived) {
           board.archivedCards = board.archivedCards.filter((card) => card.id !== selectedCardId);
         } else {
@@ -1548,7 +1553,7 @@
         if (!column) return;
         const card = {
           id: generateCardId(),
-          title: "Untitled card",
+          title: "未命名卡片",
           body: "",
           columnId,
           priority: DEFAULT_PRIORITY,
@@ -1644,8 +1649,11 @@
       function columnTitleToId(title) {
         const normalized = String(title).trim().toLowerCase();
         if (normalized === "todo") return "todo";
+        if (normalized === "待办") return "todo";
         if (normalized === "doing") return "doing";
+        if (normalized === "进行中") return "doing";
         if (normalized === "done") return "done";
+        if (normalized === "已完成") return "done";
         return null;
       }
 
@@ -1663,7 +1671,7 @@
 
       function priorityPill(priority) {
         const safe = normalizePriority(priority);
-        return `<span class="pill priority-${safe}">${capitalize(safe)}</span>`;
+        return `<span class="pill priority-${safe}">${PRIORITY_LABELS[safe]}</span>`;
       }
 
       function renderTagChips(tags) {
@@ -1684,7 +1692,7 @@
         let insideFence = false;
         for (let index = 0; index < lines.length; index += 1) {
           const line = lines[index];
-          if (!insideFence && /^#{1,6}\s+Time Management\s*$/i.test(line.trim())) {
+          if (!insideFence && /^#{1,6}\s+(Time Management|时间管理)\s*$/i.test(line.trim())) {
             return index;
           }
           if (isFenceLine(line)) insideFence = !insideFence;
