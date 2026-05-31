@@ -1,4 +1,5 @@
 import type { Board, Card, ColumnId } from "../types/board";
+import { appendStageHistory } from "./timeManagement";
 
 export interface CardLocation {
   columnId: ColumnId;
@@ -82,6 +83,10 @@ export function moveCard(
   }
 
   const movingCard = board.columns[source.columnIndex].cards[source.cardIndex];
+  const movedAcrossColumns = source.columnId !== targetColumnId;
+  const nextMovingCard = movedAcrossColumns
+    ? { ...movingCard, body: appendStageHistory(movingCard.body, targetColumnId) }
+    : movingCard;
 
   const columnsWithoutCard = board.columns.map((column) => ({
     ...column,
@@ -97,7 +102,10 @@ export function moveCard(
 
       const nextCards = [...column.cards];
       const clampedIndex = Math.max(0, Math.min(targetIndex, nextCards.length));
-      nextCards.splice(clampedIndex, 0, { ...movingCard, columnId: targetColumnId });
+      nextCards.splice(clampedIndex, 0, {
+        ...nextMovingCard,
+        columnId: targetColumnId,
+      });
 
       return { ...column, cards: nextCards };
     }),

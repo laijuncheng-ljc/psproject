@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>本地 MD 看板</title>
+    <link rel="icon" href="data:," />
     <style>
       :root {
         --bg: #f5f7fb;
@@ -609,6 +610,55 @@
         gap: 8px;
       }
 
+      .stage-history {
+        display: grid;
+        gap: 8px;
+        border: 1px solid #e1e7f0;
+        border-radius: 9px;
+        background: var(--surface);
+        padding: 10px;
+      }
+
+      .stage-history h4 {
+        margin: 0;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .stage-history ol {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .stage-history li {
+        display: grid;
+        gap: 2px;
+        border-left: 3px solid #79a7ff;
+        padding-left: 8px;
+      }
+
+      .stage-history span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .stage-history strong {
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .stage-history p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
       .tm-row {
         display: grid;
         grid-template-columns: 20px minmax(0, 1fr) auto;
@@ -809,6 +859,7 @@
           <h3>时间管理</h3>
           <span class="tm-count" id="tmCount">0/0</span>
         </div>
+        <div class="stage-history" id="stageHistory"></div>
         <div class="tm-list" id="tmList"></div>
         <form class="tm-add" id="tmAddForm">
           <input id="tmNewTitle" placeholder="添加子项目" aria-label="添加子项目" />
@@ -841,10 +892,18 @@
         medium: "中",
         low: "低",
       };
+      const STAGE_LABELS = {
+        todo: "待办",
+        doing: "进行中",
+        done: "已完成",
+        archived: "归档",
+      };
       const ID_COMMENT_PATTERN = /^<!--\s*id:\s*(.+?)\s*-->$/;
       const META_COMMENT_PATTERN = /^<!--\s*([a-z_]+):\s*(.*?)\s*-->$/i;
       const TASK_PATTERN =
         /^(\s*)[-*]\s+\[([ xX])\]\s+(.*?)(?:\s+<!--\s*completed_at:\s*(.*?)\s*-->)?\s*$/;
+      const HISTORY_PATTERN =
+        /^(\s*)[-*]\s+(.+?)\s+进入(.+?)(?:\s+<!--\s*stage:\s*(.*?)\s*-->)?\s*$/;
 
       let board = null;
       let openedFile = null;
@@ -891,6 +950,7 @@
         editorTags: document.getElementById("editorTags"),
         editorBody: document.getElementById("editorBody"),
         tmCount: document.getElementById("tmCount"),
+        stageHistory: document.getElementById("stageHistory"),
         tmList: document.getElementById("tmList"),
         tmAddForm: document.getElementById("tmAddForm"),
         tmNewTitle: document.getElementById("tmNewTitle"),
@@ -1183,7 +1243,7 @@
         const lines = body.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
         const start = findTimeManagementStart(lines);
         if (start === -1) {
-          return { body: trimBlankEdges(lines).join("\n"), items: [] };
+          return { body: trimBlankEdges(lines).join("\n"), items: [], history: [] };
         }
         const level = getHeadingLevel(lines[start]) || 4;
         const end = findSectionEnd(lines, start + 1, level);
@@ -1203,23 +1263,46 @@
               },
             ];
           }),
+          history: sectionLines.flatMap((line, index) => {
+            const match = HISTORY_PATTERN.exec(line);
+            if (!match) return [];
+            return [
+              {
+                id: `stage-history-${index}`,
+                stage: normalizeStage(match[4] || match[3]),
+                timestamp: match[2].trim(),
+              },
+            ];
+          }),
         };
       }
 
-      function serializeTimeManagement(body, items) {
+      function serializeTimeManagement(body, items, history = []) {
         const cleanBody = trimBlankEdges(
           body.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n"),
         ).join("\n");
         const visibleItems = items.filter((item) => item.title.trim() !== "");
-        if (visibleItems.length === 0) return cleanBody;
-        const taskLines = visibleItems.map((item) => {
-          const timestamp =
-            item.completed && item.completedAt
-              ? ` <!-- completed_at: ${item.completedAt} -->`
-              : "";
-          return `- [${item.completed ? "x" : " "}] ${item.title.trim()}${timestamp}`;
-        });
-        const section = `#### 时间管理\n\n${taskLines.join("\n")}`;
+        const visibleHistory = history.filter((item) => item.timestamp.trim() !== "");
+        if (visibleItems.length === 0 && visibleHistory.length === 0) return cleanBody;
+        const blocks = [];
+        if (visibleHistory.length) {
+          const historyLines = visibleHistory.map((item) => {
+            const stage = normalizeStage(item.stage);
+            return `- ${item.timestamp.trim()} 进入${STAGE_LABELS[stage]} <!-- stage: ${stage} -->`;
+          });
+          blocks.push(`##### 环节记录\n\n${historyLines.join("\n")}`);
+        }
+        if (visibleItems.length) {
+          const taskLines = visibleItems.map((item) => {
+            const timestamp =
+              item.completed && item.completedAt
+                ? ` <!-- completed_at: ${item.completedAt} -->`
+                : "";
+            return `- [${item.completed ? "x" : " "}] ${item.title.trim()}${timestamp}`;
+          });
+          blocks.push(`##### 子项目\n\n${taskLines.join("\n")}`);
+        }
+        const section = `#### 时间管理\n\n${blocks.join("\n\n")}`;
         return cleanBody ? `${cleanBody}\n\n${section}` : section;
       }
 
@@ -1409,7 +1492,31 @@
         els.editorTags.value = card.tags.join(", ");
         els.editorBody.value = parsed.body;
         els.archiveCardButton.textContent = selectedArchived ? "恢复" : "归档";
+        renderStageHistory(parsed.history);
         renderTimeItems(parsed.items);
+      }
+
+      function renderStageHistory(history) {
+        els.stageHistory.innerHTML = "<h4>环节记录</h4>";
+        if (!history.length) {
+          const empty = document.createElement("p");
+          empty.textContent = "暂无环节记录";
+          els.stageHistory.appendChild(empty);
+          return;
+        }
+        const list = document.createElement("ol");
+        for (const item of history) {
+          const row = document.createElement("li");
+          const stage = normalizeStage(item.stage);
+          row.dataset.stage = stage;
+          row.dataset.timestamp = item.timestamp;
+          row.innerHTML = `
+            <span>${escapeHtml(item.timestamp)}</span>
+            <strong>进入${STAGE_LABELS[stage]}</strong>
+          `;
+          list.appendChild(row);
+        }
+        els.stageHistory.appendChild(list);
       }
 
       function renderTimeItems(items) {
@@ -1460,6 +1567,14 @@
         }));
       }
 
+      function getEditorHistory() {
+        return [...els.stageHistory.querySelectorAll("li")].map((row, index) => ({
+          id: `stage-history-${index}`,
+          stage: normalizeStage(row.dataset.stage),
+          timestamp: row.dataset.timestamp || "",
+        }));
+      }
+
       function updateTimeItem(itemId, updates) {
         const items = getEditorItems().map((item) =>
           item.id === itemId ? { ...item, ...updates } : item,
@@ -1492,7 +1607,11 @@
         card.title = els.editorTitle.value.trim() || "未命名卡片";
         card.priority = normalizePriority(els.editorPriority.value);
         card.tags = parseTags(els.editorTags.value);
-        card.body = serializeTimeManagement(els.editorBody.value, getEditorItems());
+        card.body = serializeTimeManagement(
+          els.editorBody.value,
+          getEditorItems(),
+          getEditorHistory(),
+        );
         selectedCardId = null;
         selectedArchived = false;
         markDirty();
@@ -1505,11 +1624,28 @@
         else archiveCard(selectedCardId);
       }
 
+      function appendStageHistory(body, stage, timestamp = formatLocalTimestamp()) {
+        const parsed = parseTimeManagement(body);
+        const normalizedStage = normalizeStage(stage);
+        const lastEntry = parsed.history[parsed.history.length - 1];
+        if (lastEntry && lastEntry.stage === normalizedStage) return body;
+        return serializeTimeManagement(parsed.body, parsed.items, [
+          ...parsed.history,
+          {
+            id: `stage-history-${randomToken()}`,
+            stage: normalizedStage,
+            timestamp,
+          },
+        ]);
+      }
+
       function archiveCard(cardId) {
         const source = findCardLocation(cardId);
         if (!source) return;
         const [card] = source.column.cards.splice(source.cardIndex, 1);
-        card.archivedAt = formatLocalTimestamp();
+        const timestamp = formatLocalTimestamp();
+        card.archivedAt = timestamp;
+        card.body = appendStageHistory(card.body, "archived", timestamp);
         board.archivedCards.unshift(card);
         selectedCardId = null;
         selectedArchived = false;
@@ -1523,6 +1659,7 @@
         const [card] = board.archivedCards.splice(index, 1);
         card.archivedAt = null;
         const column = board.columns.find((item) => item.id === card.columnId) || board.columns[0];
+        card.body = appendStageHistory(card.body, column.id);
         column.cards.push(card);
         selectedCardId = null;
         selectedArchived = false;
@@ -1552,7 +1689,7 @@
         const card = {
           id: generateCardId(),
           title: "未命名卡片",
-          body: "",
+          body: appendStageHistory("", columnId),
           columnId,
           priority: DEFAULT_PRIORITY,
           tags: [],
@@ -1570,6 +1707,9 @@
         const targetColumn = board.columns.find((column) => column.id === targetColumnId);
         if (!source || !targetColumn) return;
         const [card] = source.column.cards.splice(source.cardIndex, 1);
+        if (source.columnId !== targetColumnId) {
+          card.body = appendStageHistory(card.body, targetColumnId);
+        }
         card.columnId = targetColumnId;
         const adjustedIndex =
           source.columnId === targetColumnId && source.cardIndex < targetIndex
@@ -1658,6 +1798,14 @@
       function normalizePriority(value) {
         const priority = String(value || "").trim().toLowerCase();
         return PRIORITIES.has(priority) ? priority : DEFAULT_PRIORITY;
+      }
+
+      function normalizeStage(value) {
+        const stage = String(value || "").trim().toLowerCase();
+        if (stage === "todo" || stage === "待办") return "todo";
+        if (stage === "doing" || stage === "进行中") return "doing";
+        if (stage === "done" || stage === "已完成") return "done";
+        return "archived";
       }
 
       function parseTags(value) {

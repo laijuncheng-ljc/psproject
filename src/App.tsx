@@ -21,6 +21,7 @@ import {
   updateCardInBoard,
 } from "./utils/board";
 import { generateCardId } from "./utils/id";
+import { appendStageHistory } from "./utils/timeManagement";
 
 const DEFAULT_NEW_CARD_COLUMN_ID: ColumnId = "todo";
 
@@ -108,7 +109,7 @@ function App() {
     const newCard: Card = {
       id: generateCardId(),
       title: "未命名卡片",
-      body: "",
+      body: appendStageHistory("", columnId),
       columnId,
     };
 

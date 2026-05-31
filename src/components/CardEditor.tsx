@@ -6,6 +6,7 @@ import {
   formatLocalTimestamp,
   parseTimeManagementSection,
   serializeTimeManagementSection,
+  type StageHistoryEntry,
   type TimeManagementItem,
 } from "../utils/timeManagement";
 
@@ -47,7 +48,7 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
   function commitAndClose() {
     onSave(card.id, {
       title: title.trim() || "未命名卡片",
-      body: serializeTimeManagementSection(body, items),
+      body: serializeTimeManagementSection(body, items, parsedTimeManagement.history),
     });
     onClose();
   }
@@ -123,6 +124,7 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
             {completedCount}/{items.length}
           </span>
         </div>
+        <StageHistoryList entries={parsedTimeManagement.history} />
         <div className="time-management-list">
           {items.length > 0 ? (
             items.map((item) => (
@@ -158,6 +160,37 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
       </div>
     </aside>
   );
+}
+
+interface StageHistoryListProps {
+  entries: StageHistoryEntry[];
+}
+
+function StageHistoryList({ entries }: StageHistoryListProps) {
+  return (
+    <div className="stage-history">
+      <h4>环节记录</h4>
+      {entries.length > 0 ? (
+        <ol>
+          {entries.map((entry) => (
+            <li key={entry.id}>
+              <span>{entry.timestamp}</span>
+              <strong>进入{getStageLabel(entry.stage)}</strong>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p>暂无环节记录</p>
+      )}
+    </div>
+  );
+}
+
+function getStageLabel(stage: StageHistoryEntry["stage"]): string {
+  if (stage === "todo") return "待办";
+  if (stage === "doing") return "进行中";
+  if (stage === "done") return "已完成";
+  return "归档";
 }
 
 interface TimeManagementRowProps {

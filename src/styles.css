@@ -469,6 +469,55 @@ textarea {
   gap: 8px;
 }
 
+.stage-history {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e1e7f0;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.stage-history h4 {
+  margin: 0;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stage-history ol {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage-history li {
+  display: grid;
+  gap: 2px;
+  border-left: 3px solid #79a7ff;
+  padding-left: 8px;
+}
+
+.stage-history span {
+  color: #68758a;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.stage-history strong {
+  color: #172033;
+  font-size: 13px;
+}
+
+.stage-history p {
+  margin: 0;
+  color: #7a8798;
+  font-size: 12px;
+  font-weight: 650;
+}
+
 .time-management-empty {
   margin: 0;
   border: 1px dashed #cbd4e1;

@@ -125,5 +125,7 @@ Body without an id comment.
       "card-20260531-001",
     ]);
     expect(moved.columns[2].cards[1].columnId).toBe("done");
+    expect(moved.columns[2].cards[1].body).toContain("进入已完成");
+    expect(moved.columns[2].cards[1].body).toContain("<!-- stage: done -->");
   });
 });
