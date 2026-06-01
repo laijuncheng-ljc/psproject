@@ -15,5 +15,6 @@ export interface Column {
 
 export interface Board {
   title: string;
+  notes: string;
   columns: Column[];
 }

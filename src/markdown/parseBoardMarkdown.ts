@@ -17,6 +17,19 @@ const COLUMN_TITLE_TO_ID: Record<string, ColumnId> = {
 
 const ID_COMMENT_PATTERN = /^<!--\s*id:\s*(.+?)\s*-->$/;
 const FENCE_PATTERN = /^ {0,3}(```+|~~~+)/;
+const NOTES_SECTION_TITLES = new Set([
+  "notes",
+  "project notes",
+  "项目备注",
+  "整体备注",
+  "总体备注",
+]);
+const SUMMARY_SECTION_TITLES = new Set([
+  "current task status",
+  "task status",
+  "当前任务状态",
+  "任务状态",
+]);
 
 export function parseBoardMarkdown(markdown: string): Board {
   const normalizedMarkdown = markdown.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -24,6 +37,7 @@ export function parseBoardMarkdown(markdown: string): Board {
   if (normalizedMarkdown.trim() === "") {
     return {
       title: DEFAULT_BOARD_TITLE,
+      notes: "",
       columns: createDefaultColumns(),
     };
   }
@@ -31,6 +45,8 @@ export function parseBoardMarkdown(markdown: string): Board {
   const columns = createDefaultColumns();
   const lines = normalizedMarkdown.split("\n");
   let boardTitle = DEFAULT_BOARD_TITLE;
+  const boardNotesLines: string[] = [];
+  let currentBoardSection: "notes" | null = null;
   let currentColumnId: ColumnId | null = null;
   let currentCardTitle: string | null = null;
   let currentCardBodyLines: string[] = [];
@@ -58,9 +74,10 @@ export function parseBoardMarkdown(markdown: string): Board {
     if (!insideFence) {
       const boardTitleMatch = /^#\s+(.+?)\s*$/.exec(line);
 
-      if (boardTitleMatch) {
+      if (boardTitleMatch && currentBoardSection !== "notes") {
         flushCurrentCard();
         boardTitle = boardTitleMatch[1].trim() || DEFAULT_BOARD_TITLE;
+        currentBoardSection = null;
         currentColumnId = null;
         continue;
       }
@@ -70,7 +87,25 @@ export function parseBoardMarkdown(markdown: string): Board {
       if (columnTitleMatch) {
         flushCurrentCard();
         const normalizedColumnTitle = columnTitleMatch[1].trim().toLowerCase();
-        currentColumnId = COLUMN_TITLE_TO_ID[normalizedColumnTitle] ?? null;
+        const columnId = COLUMN_TITLE_TO_ID[normalizedColumnTitle] ?? null;
+
+        if (isNotesSectionTitle(normalizedColumnTitle)) {
+          currentBoardSection = "notes";
+          currentColumnId = null;
+          continue;
+        }
+
+        if (
+          currentBoardSection === "notes" &&
+          columnId === null &&
+          !isSummarySectionTitle(normalizedColumnTitle)
+        ) {
+          boardNotesLines.push(line);
+          continue;
+        }
+
+        currentBoardSection = null;
+        currentColumnId = columnId;
         continue;
       }
 
@@ -84,7 +119,9 @@ export function parseBoardMarkdown(markdown: string): Board {
       }
     }
 
-    if (currentCardTitle !== null) {
+    if (currentBoardSection === "notes") {
+      boardNotesLines.push(line);
+    } else if (currentCardTitle !== null) {
       currentCardBodyLines.push(line);
     }
 
@@ -97,11 +134,20 @@ export function parseBoardMarkdown(markdown: string): Board {
 
   return {
     title: boardTitle,
+    notes: trimBlankEdges(boardNotesLines).join("\n"),
     columns: DEFAULT_COLUMNS.map((column) => ({
       ...column,
       cards: columns.find((candidate) => candidate.id === column.id)?.cards ?? [],
     })),
   };
+}
+
+function isNotesSectionTitle(title: string): boolean {
+  return NOTES_SECTION_TITLES.has(title);
+}
+
+function isSummarySectionTitle(title: string): boolean {
+  return SUMMARY_SECTION_TITLES.has(title);
 }
 
 function createCard(

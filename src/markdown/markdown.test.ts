@@ -5,6 +5,10 @@ import { serializeBoardMarkdown } from "./serializeBoardMarkdown";
 
 const sampleBoard = `# 个人看板
 
+## 项目备注
+
+项目目标：把本地 Markdown 变成项目管理面板。
+
 ## 待办
 
 ### 实现拖拽排序
@@ -36,6 +40,7 @@ describe("Markdown board parser and serializer", () => {
     const board = parseBoardMarkdown(sampleBoard);
 
     expect(board.title).toBe("个人看板");
+    expect(board.notes).toBe("项目目标：把本地 Markdown 变成项目管理面板。");
     expect(board.columns).toHaveLength(3);
     expect(board.columns[0].cards).toHaveLength(2);
     expect(board.columns[0].cards[0]).toMatchObject({
@@ -51,6 +56,7 @@ describe("Markdown board parser and serializer", () => {
     const board = parseBoardMarkdown("");
 
     expect(board.title).toBe("个人看板");
+    expect(board.notes).toBe("");
     expect(board.columns.map((column) => column.title)).toEqual([
       "待办",
       "进行中",
@@ -79,6 +85,10 @@ Body without an id comment.
     const serialized = serializeBoardMarkdown(firstParse);
     const secondParse = parseBoardMarkdown(serialized);
 
+    expect(serialized).toContain("## 项目备注");
+    expect(serialized).toContain("## 当前任务状态");
+    expect(serialized).toContain("- 当前状态: 待办");
+    expect(serialized).toContain("- 完成情况: 卡片未完成");
     expect(serialized).toContain("## 待办");
     expect(serialized).toContain("## 进行中");
     expect(serialized).toContain("## 已完成");
@@ -87,6 +97,40 @@ Body without an id comment.
       "实现拖拽排序",
       "写 Markdown 解析器",
     ]);
+    expect(secondParse.notes).toBe("项目目标：把本地 Markdown 变成项目管理面板。");
+  });
+
+  it("ignores generated task summaries when parsing cards", () => {
+    const board = parseBoardMarkdown(`# 个人看板
+
+## 项目备注
+
+整体备注。
+
+## 风险记录
+
+这里仍然属于项目备注。
+
+## 当前任务状态
+<!-- generated: true -->
+
+### 状态：待办
+
+#### 这不是卡片
+
+- 当前状态: 待办
+
+## 待办
+
+### 真正的卡片
+<!-- id: real-card -->
+
+正文。
+`);
+
+    expect(board.notes).toBe("整体备注。\n\n## 风险记录\n\n这里仍然属于项目备注。");
+    expect(board.columns[0].cards).toHaveLength(1);
+    expect(board.columns[0].cards[0].title).toBe("真正的卡片");
   });
 
   it("does not parse headings inside fenced code blocks as cards or columns", () => {

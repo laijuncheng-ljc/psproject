@@ -1,26 +1,19 @@
 interface EmptyStateProps {
-  canUseFiles: boolean;
-  onOpen: () => void;
+  isLoading: boolean;
+  onReload: () => void;
 }
 
-export function EmptyState({ canUseFiles, onOpen }: EmptyStateProps) {
+export function EmptyState({ isLoading, onReload }: EmptyStateProps) {
   return (
     <section className="empty-state">
       <div className="empty-state-inner">
-        <h2>本地 MD 看板</h2>
-        <p>
-          {canUseFiles
-            ? "打开一个本地 Markdown 文件开始使用。"
-            : "当前浏览器不支持本地文件读写。请使用 Chrome 或 Edge 桌面版。"}
-        </p>
-        <button
-          type="button"
-          className="button-primary"
-          onClick={onOpen}
-          disabled={!canUseFiles}
-        >
-          打开 Markdown 文件
-        </button>
+        <h2>{isLoading ? "正在载入看板" : "无法载入看板"}</h2>
+        <p>{isLoading ? "正在读取项目里的 board.md。" : "请确认本地服务正在运行。"}</p>
+        {!isLoading ? (
+          <button type="button" className="button-primary" onClick={onReload}>
+            重新载入
+          </button>
+        ) : null}
       </div>
     </section>
   );
