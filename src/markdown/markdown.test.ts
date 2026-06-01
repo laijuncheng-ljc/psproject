@@ -107,15 +107,15 @@ Body without an id comment.
 
 ### 分类卡片
 <!-- id: card-category -->
-<!-- category: 开发 -->
+<!-- category: 专项 -->
 <!-- tags: 前端 -->
 
 正文内容。
 `);
     const serialized = serializeBoardMarkdown(board);
 
-    expect(serialized).toContain("<!-- category: 开发 -->");
-    expect(serialized).toContain("- 分类: 开发");
+    expect(serialized).toContain("<!-- category: 专项 -->");
+    expect(serialized).toContain("- 分类: 专项");
     expect(serialized).toContain("- 标签: 前端");
     expect(serialized).toContain("  - 正文: 正文内容。");
   });

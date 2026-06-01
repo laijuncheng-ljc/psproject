@@ -67,7 +67,7 @@ npm run dev
 - ID: card-example-001
 - 当前状态: 待办
 - 完成情况: 卡片未完成；子项目 1/3 已完成
-- 分类: 开发
+- 分类: 专项
 - 优先级: high
 - 标签: 解析器, MVP
 - 时间节点:
@@ -83,7 +83,7 @@ npm run dev
 
 ### 写 Markdown 解析器
 <!-- id: card-example-001 -->
-<!-- category: 开发 -->
+<!-- category: 专项 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
 
@@ -105,7 +105,7 @@ npm run dev
 
 ### 实现拖拽
 <!-- id: card-example-002 -->
-<!-- category: 开发 -->
+<!-- category: 紧急 -->
 <!-- priority: medium -->
 <!-- tags: 交互 -->
 
@@ -115,7 +115,7 @@ npm run dev
 
 ### 确定 MVP 范围
 <!-- id: card-example-003 -->
-<!-- category: 文档 -->
+<!-- category: 长期 -->
 <!-- priority: low -->
 
 只做本地 Markdown 文件驱动的个人看板。
@@ -146,14 +146,14 @@ npm run dev
 可选元数据：
 
 ```md
-<!-- category: 开发 -->
+<!-- category: 专项 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
 <!-- column: todo -->
 <!-- archived_at: 2026-05-31T10:30:00+08:00 -->
 ```
 
-- `category` 是下拉选择的分类标签，当前内置：需求、开发、问题、文档、调研、会议、其他。
+- `category` 是下拉选择的列内大模块，当前内置：长期、专项、紧急、其他。看板会在每个状态列里按这些大模块分组显示。
 - `priority` 使用 `high`、`medium`、`low` 三个机器值，界面显示为高、中、低。
 - `tags` 是逗号分隔的标签。
 - `column` 用于归档卡片恢复时回到原列。

@@ -12,7 +12,13 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useMemo, useState } from "react";
 import type { Board, ColumnId } from "../types/board";
-import { findCardLocation, getCardById, moveCard } from "../utils/board";
+import {
+  findCardLocation,
+  getCardById,
+  moveCard,
+  updateCardCategoryInBoard,
+} from "../utils/board";
+import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { KanbanColumn } from "./KanbanColumn";
 
 interface BoardViewProps {
@@ -23,7 +29,8 @@ interface BoardViewProps {
 
 type DropData =
   | { type: "card"; cardId: string; columnId: ColumnId }
-  | { type: "column"; columnId: ColumnId };
+  | { type: "column"; columnId: ColumnId }
+  | { type: "category"; columnId: ColumnId; category: string };
 
 export function BoardView({
   board,
@@ -62,16 +69,21 @@ export function BoardView({
     const overData = over.data.current as DropData | undefined;
     let targetColumnId: ColumnId | null = null;
     let targetIndex = 0;
+    let targetCategory: string | null = null;
+    const activeCard = getCardById(board, activeId);
+    const activeCategory = activeCard ? parseCardMetadata(activeCard.body).category : "";
 
     if (overData?.type === "card") {
       const overLocation = findCardLocation(board, String(over.id));
+      const overCard = getCardById(board, String(over.id));
 
-      if (!overLocation) {
+      if (!overLocation || !overCard) {
         return;
       }
 
       targetColumnId = overLocation.columnId;
       targetIndex = overLocation.cardIndex;
+      targetCategory = parseCardMetadata(overCard.body).category;
     }
 
     if (overData?.type === "column") {
@@ -80,9 +92,19 @@ export function BoardView({
         board.columns.find((column) => column.id === targetColumnId)?.cards.length ?? 0;
     }
 
+    if (overData?.type === "category") {
+      targetColumnId = overData.columnId;
+      targetCategory = overData.category;
+      targetIndex =
+        board.columns.find((column) => column.id === targetColumnId)?.cards.length ?? 0;
+    }
+
     if (!targetColumnId) {
       return;
     }
+
+    const categoryChanged =
+      targetCategory !== null && targetCategory !== activeCategory;
 
     const sourceColumnLength =
       board.columns.find((column) => column.id === activeLocation.columnId)?.cards
@@ -93,11 +115,17 @@ export function BoardView({
         (activeLocation.cardIndex === sourceColumnLength - 1 &&
           targetIndex === sourceColumnLength));
 
-    if (movingToSameSpot) {
+    if (movingToSameSpot && !categoryChanged) {
       return;
     }
 
-    onBoardChange(moveCard(board, activeId, targetColumnId, targetIndex));
+    const movedBoard = moveCard(board, activeId, targetColumnId, targetIndex);
+
+    onBoardChange(
+      targetCategory === null
+        ? movedBoard
+        : updateCardCategoryInBoard(movedBoard, activeId, targetCategory),
+    );
   }
 
   return (
@@ -121,10 +149,12 @@ export function BoardView({
       </main>
       <DragOverlay>
         {activeCard ? (
-          <div className="kanban-card drag-overlay-card">
+          <div className="kanban-card category-none drag-overlay-card">
             <span className="card-title">{activeCard.title}</span>
             {activeCard.body.trim() ? (
-              <span className="card-preview">{activeCard.body.trim()}</span>
+              <span className="card-preview">
+                {stripCardMetadataComments(activeCard.body).trim()}
+              </span>
             ) : null}
           </div>
         ) : null}

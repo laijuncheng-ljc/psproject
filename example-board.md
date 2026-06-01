@@ -4,7 +4,7 @@
 
 ### 写 Markdown 解析器
 <!-- id: card-example-001 -->
-<!-- category: 开发 -->
+<!-- category: 专项 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
 
@@ -24,7 +24,7 @@
 
 ### 实现卡片编辑
 <!-- id: card-example-002 -->
-<!-- category: 需求 -->
+<!-- category: 长期 -->
 <!-- priority: medium -->
 <!-- tags: 编辑 -->
 
@@ -34,7 +34,7 @@
 
 ### 实现拖拽
 <!-- id: card-example-003 -->
-<!-- category: 开发 -->
+<!-- category: 紧急 -->
 <!-- priority: high -->
 <!-- tags: 交互 -->
 
@@ -51,7 +51,7 @@
 
 ### 确定 MVP 范围
 <!-- id: card-example-004 -->
-<!-- category: 文档 -->
+<!-- category: 长期 -->
 <!-- priority: low -->
 <!-- tags: 范围 -->
 

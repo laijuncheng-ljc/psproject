@@ -1,4 +1,5 @@
 import type { Board, Card, ColumnId } from "../types/board";
+import { updateCardCategory } from "./cardMetadata";
 import { appendStageHistory } from "./timeManagement";
 
 export interface CardLocation {
@@ -55,6 +56,24 @@ export function updateCardInBoard(
       ...column,
       cards: column.cards.map((card) =>
         card.id === cardId ? { ...card, ...updates } : card,
+      ),
+    })),
+  };
+}
+
+export function updateCardCategoryInBoard(
+  board: Board,
+  cardId: string,
+  category: string,
+): Board {
+  return {
+    ...board,
+    columns: board.columns.map((column) => ({
+      ...column,
+      cards: column.cards.map((card) =>
+        card.id === cardId
+          ? { ...card, body: updateCardCategory(card.body, category) }
+          : card,
       ),
     })),
   };

@@ -1,7 +1,11 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import type { Card } from "../types/board";
-import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
+import {
+  getCategoryTone,
+  parseCardMetadata,
+  stripCardMetadataComments,
+} from "../utils/cardMetadata";
 import { parseTimeManagementSection } from "../utils/timeManagement";
 
 interface KanbanCardProps {
@@ -13,6 +17,7 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
   const timeManagement = parseTimeManagementSection(card.body);
   const metadata = parseCardMetadata(timeManagement.body);
   const title = card.title.trim();
+  const categoryTone = getCategoryTone(metadata.category);
   const preview = stripCardMetadataComments(timeManagement.body).trim();
   const completedCount = timeManagement.items.filter((item) => item.completed).length;
   const {
@@ -40,7 +45,9 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
     <button
       ref={setNodeRef}
       type="button"
-      className={`kanban-card${isDragging ? " is-dragging" : ""}`}
+      className={`kanban-card category-${categoryTone}${
+        isDragging ? " is-dragging" : ""
+      }`}
       style={style}
       onClick={() => onSelect(card.id)}
       {...attributes}

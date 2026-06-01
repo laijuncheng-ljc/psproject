@@ -4,16 +4,25 @@ export interface CardMetadata {
   tags: string[];
 }
 
+export type CardCategoryTone = "long-term" | "focused" | "urgent" | "custom" | "none";
+
 export const CARD_CATEGORY_OPTIONS = [
   { value: "", label: "未分类" },
-  { value: "需求", label: "需求" },
-  { value: "开发", label: "开发" },
-  { value: "问题", label: "问题" },
-  { value: "文档", label: "文档" },
-  { value: "调研", label: "调研" },
-  { value: "会议", label: "会议" },
+  { value: "长期", label: "长期" },
+  { value: "专项", label: "专项" },
+  { value: "紧急", label: "紧急" },
   { value: "其他", label: "其他" },
 ] as const;
+
+export const CARD_CATEGORY_GROUPS: Array<{
+  value: string;
+  label: string;
+  tone: CardCategoryTone;
+}> = [
+  { value: "紧急", label: "紧急", tone: "urgent" },
+  { value: "专项", label: "专项", tone: "focused" },
+  { value: "长期", label: "长期", tone: "long-term" },
+];
 
 const METADATA_COMMENT_PATTERN =
   /^<!--\s*(category|priority|tags):\s*(.*?)\s*-->$/i;
@@ -82,6 +91,10 @@ export function serializeCardMetadata(
     : metadataLines.join("\n");
 }
 
+export function updateCardCategory(body: string, category: string): string {
+  return serializeCardMetadata({ ...parseCardMetadata(body), category }, body);
+}
+
 export function stripCardMetadataComments(body: string): string {
   let insideFence = false;
   const lines: string[] = [];
@@ -100,6 +113,18 @@ export function stripCardMetadataComments(body: string): string {
   }
 
   return trimBlankEdges(lines).join("\n");
+}
+
+export function getCategoryTone(category: string): CardCategoryTone {
+  if (category === "长期") return "long-term";
+  if (category === "专项") return "focused";
+  if (category === "紧急") return "urgent";
+  if (category.trim()) return "custom";
+  return "none";
+}
+
+export function getCategoryLabel(category: string): string {
+  return category.trim() || "未分类";
 }
 
 function parseTags(value: string): string[] {
