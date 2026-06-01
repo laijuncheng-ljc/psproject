@@ -1,5 +1,6 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
+import type { CSSProperties } from "react";
 import type { Card } from "../types/board";
 import {
   getCategoryTone,
@@ -20,6 +21,12 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
   const categoryTone = getCategoryTone(metadata.category);
   const preview = stripCardMetadataComments(timeManagement.body).trim();
   const completedCount = timeManagement.items.filter((item) => item.completed).length;
+  const totalItems = timeManagement.items.length;
+  const progressPercent =
+    totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+  const priority = normalizePriority(metadata.priority);
+  const visibleTags = metadata.tags.slice(0, 2);
+  const hiddenTagCount = Math.max(0, metadata.tags.length - visibleTags.length);
   const {
     attributes,
     listeners,
@@ -36,10 +43,13 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
     },
   });
 
-  const style = {
+  const dragStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  const progressStyle = {
+    "--progress": `${progressPercent}%`,
+  } as CSSProperties;
 
   return (
     <button
@@ -48,7 +58,7 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       className={`kanban-card category-${categoryTone}${
         isDragging ? " is-dragging" : ""
       }`}
-      style={style}
+      style={dragStyle}
       onClick={() => onSelect(card.id)}
       {...attributes}
       {...listeners}
@@ -61,18 +71,45 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       ) : (
         <span className="card-preview card-preview-empty">无正文</span>
       )}
-      {metadata.category || timeManagement.items.length > 0 ? (
+      {metadata.category || priority || visibleTags.length > 0 || totalItems > 0 ? (
         <span className="card-meta-row">
           {metadata.category ? (
             <span className="category-chip">{metadata.category}</span>
           ) : null}
-          {timeManagement.items.length > 0 ? (
-            <span className="subitem-progress">
-              {completedCount}/{timeManagement.items.length} 子项目
+          {priority ? (
+            <span className={`priority-chip priority-${priority}`}>
+              {getPriorityLabel(priority)}
+            </span>
+          ) : null}
+          {visibleTags.map((tag) => (
+            <span key={tag} className="tag-chip">
+              {tag}
+            </span>
+          ))}
+          {hiddenTagCount > 0 ? (
+            <span className="tag-chip">+{hiddenTagCount}</span>
+          ) : null}
+          {totalItems > 0 ? (
+            <span className="subitem-progress" style={progressStyle}>
+              {completedCount}/{totalItems}
             </span>
           ) : null}
         </span>
       ) : null}
     </button>
   );
+}
+
+function normalizePriority(priority: string | null): "high" | "medium" | "low" | null {
+  if (priority === "high" || priority === "medium" || priority === "low") {
+    return priority;
+  }
+
+  return null;
+}
+
+function getPriorityLabel(priority: "high" | "medium" | "low"): string {
+  if (priority === "high") return "高";
+  if (priority === "medium") return "中";
+  return "低";
 }

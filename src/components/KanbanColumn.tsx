@@ -16,6 +16,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ column, onCardSelect }: KanbanColumnProps) {
+  const groupedCards = getCardGroups(column.cards);
   const { isOver, setNodeRef } = useDroppable({
     id: `column:${column.id}`,
     data: {
@@ -30,23 +31,52 @@ export function KanbanColumn({ column, onCardSelect }: KanbanColumnProps) {
         <h2>{column.title}</h2>
         <span>{column.cards.length}</span>
       </div>
+      <div className="column-module-summary" aria-hidden="true">
+        {groupedCards.summaryGroups.map((group) => (
+          <span key={group.value} className={`category-${group.tone}`}>
+            {group.label}
+            <strong>{group.cards.length}</strong>
+          </span>
+        ))}
+      </div>
       <SortableContext
         items={column.cards.map((card) => card.id)}
         strategy={verticalListSortingStrategy}
       >
         <div ref={setNodeRef} className="card-list">
-          {getCardGroups(column.cards).map((group) => (
-            <CategoryCardGroup
-              key={group.value || "uncategorized"}
-              columnId={column.id}
-              group={group}
-              onCardSelect={onCardSelect}
-            />
-          ))}
+          {groupedCards.visibleGroups.length > 0 ? (
+            groupedCards.visibleGroups.map((group) => (
+              <CategoryCardGroup
+                key={group.value || "uncategorized"}
+                columnId={column.id}
+                group={group}
+                onCardSelect={onCardSelect}
+              />
+            ))
+          ) : (
+            <div className="column-empty-state">暂无卡片</div>
+          )}
+          {groupedCards.emptyDropGroups.length > 0 ? (
+            <div className="category-drop-strip">
+              {groupedCards.emptyDropGroups.map((group) => (
+                <CategoryDropTarget
+                  key={group.value}
+                  columnId={column.id}
+                  group={group}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </SortableContext>
     </section>
   );
+}
+
+interface CardGroupSet {
+  summaryGroups: CardGroup[];
+  visibleGroups: CardGroup[];
+  emptyDropGroups: CardGroup[];
 }
 
 interface CardGroup {
@@ -54,6 +84,33 @@ interface CardGroup {
   label: string;
   tone: CardCategoryTone;
   cards: Card[];
+}
+
+interface CategoryDropTargetProps {
+  columnId: ColumnId;
+  group: CardGroup;
+}
+
+function CategoryDropTarget({ columnId, group }: CategoryDropTargetProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `category:${columnId}:${group.value}`,
+    data: {
+      type: "category",
+      columnId,
+      category: group.value,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`category-drop-target category-${group.tone}${
+        isOver ? " is-over" : ""
+      }`}
+    >
+      <span>{group.label}</span>
+    </div>
+  );
 }
 
 interface CategoryCardGroupProps {
@@ -88,19 +145,15 @@ function CategoryCardGroup({
         <strong>{group.cards.length}</strong>
       </div>
       <div className="card-category-list">
-        {group.cards.length > 0 ? (
-          group.cards.map((card) => (
-            <KanbanCard key={card.id} card={card} onSelect={onCardSelect} />
-          ))
-        ) : (
-          <div className="category-empty">拖到这里</div>
-        )}
+        {group.cards.map((card) => (
+          <KanbanCard key={card.id} card={card} onSelect={onCardSelect} />
+        ))}
       </div>
     </section>
   );
 }
 
-function getCardGroups(cards: Card[]): CardGroup[] {
+function getCardGroups(cards: Card[]): CardGroupSet {
   const groupedCards = new Map<string, Card[]>();
 
   for (const card of cards) {
@@ -108,7 +161,7 @@ function getCardGroups(cards: Card[]): CardGroup[] {
     groupedCards.set(category, [...(groupedCards.get(category) ?? []), card]);
   }
 
-  const requiredGroups: CardGroup[] = CARD_CATEGORY_GROUPS.map((group) => ({
+  const summaryGroups: CardGroup[] = CARD_CATEGORY_GROUPS.map((group) => ({
     ...group,
     cards: groupedCards.get(group.value) ?? [],
   }));
@@ -129,7 +182,7 @@ function getCardGroups(cards: Card[]): CardGroup[] {
     }));
   const uncategorizedCards = groupedCards.get("") ?? [];
   const uncategorizedGroup =
-    uncategorizedCards.length > 0 || cards.length === 0
+    uncategorizedCards.length > 0
       ? [
           {
             value: "",
@@ -140,5 +193,13 @@ function getCardGroups(cards: Card[]): CardGroup[] {
         ]
       : [];
 
-  return [...requiredGroups, ...customGroups, ...uncategorizedGroup];
+  return {
+    summaryGroups,
+    visibleGroups: [
+      ...summaryGroups.filter((group) => group.cards.length > 0),
+      ...customGroups,
+      ...uncategorizedGroup,
+    ],
+    emptyDropGroups: summaryGroups.filter((group) => group.cards.length === 0),
+  };
 }
