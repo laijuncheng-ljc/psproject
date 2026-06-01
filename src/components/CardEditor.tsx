@@ -2,6 +2,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import type { Card } from "../types/board";
 import {
+  CARD_CATEGORY_OPTIONS,
+  parseCardMetadata,
+  serializeCardMetadata,
+  stripCardMetadataComments,
+} from "../utils/cardMetadata";
+import {
   createTimeManagementItem,
   formatLocalTimestamp,
   parseTimeManagementSection,
@@ -39,16 +45,34 @@ interface CardEditorFormProps extends Omit<CardEditorProps, "card"> {
 
 function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps) {
   const parsedTimeManagement = parseTimeManagementSection(card.body);
+  const cardMetadata = parseCardMetadata(parsedTimeManagement.body);
   const [title, setTitle] = useState(card.title);
-  const [body, setBody] = useState(parsedTimeManagement.body);
+  const [category, setCategory] = useState(cardMetadata.category);
+  const [body, setBody] = useState(
+    stripCardMetadataComments(parsedTimeManagement.body),
+  );
   const [items, setItems] = useState(parsedTimeManagement.items);
   const [newItemTitle, setNewItemTitle] = useState("");
   const completedCount = items.filter((item) => item.completed).length;
+  const categoryOptions = CARD_CATEGORY_OPTIONS.some(
+    (option) => option.value === category,
+  )
+    ? CARD_CATEGORY_OPTIONS
+    : [...CARD_CATEGORY_OPTIONS, { value: category, label: category }];
 
   function commitAndClose() {
+    const bodyWithMetadata = serializeCardMetadata(
+      { ...cardMetadata, category },
+      body,
+    );
+
     onSave(card.id, {
       title: title.trim(),
-      body: serializeTimeManagementSection(body, items, parsedTimeManagement.history),
+      body: serializeTimeManagementSection(
+        bodyWithMetadata,
+        items,
+        parsedTimeManagement.history,
+      ),
     });
     onClose();
   }
@@ -112,6 +136,19 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
       <label>
         <span>标题</span>
         <input value={title} onChange={(event) => setTitle(event.target.value)} />
+      </label>
+      <label>
+        <span>分类</span>
+        <select
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        >
+          {categoryOptions.map((option) => (
+            <option key={option.value || "none"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="editor-body-field">
         <span>正文</span>

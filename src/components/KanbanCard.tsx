@@ -1,6 +1,7 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import type { Card } from "../types/board";
+import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { parseTimeManagementSection } from "../utils/timeManagement";
 
 interface KanbanCardProps {
@@ -10,8 +11,9 @@ interface KanbanCardProps {
 
 export function KanbanCard({ card, onSelect }: KanbanCardProps) {
   const timeManagement = parseTimeManagementSection(card.body);
+  const metadata = parseCardMetadata(timeManagement.body);
   const title = card.title.trim();
-  const preview = timeManagement.body.trim();
+  const preview = stripCardMetadataComments(timeManagement.body).trim();
   const completedCount = timeManagement.items.filter((item) => item.completed).length;
   const {
     attributes,
@@ -52,9 +54,16 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       ) : (
         <span className="card-preview card-preview-empty">无正文</span>
       )}
-      {timeManagement.items.length > 0 ? (
-        <span className="subitem-progress">
-          {completedCount}/{timeManagement.items.length} 子项目
+      {metadata.category || timeManagement.items.length > 0 ? (
+        <span className="card-meta-row">
+          {metadata.category ? (
+            <span className="category-chip">{metadata.category}</span>
+          ) : null}
+          {timeManagement.items.length > 0 ? (
+            <span className="subitem-progress">
+              {completedCount}/{timeManagement.items.length} 子项目
+            </span>
+          ) : null}
         </span>
       ) : null}
     </button>

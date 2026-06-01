@@ -9,7 +9,7 @@
 - 拖拽卡片调整顺序或状态
 - 新建、编辑、删除卡片
 - 给整个项目记录备注，备注会保存在同一个 `board.md`
-- 给卡片设置标签、优先级和归档状态
+- 给卡片设置分类、标签、优先级和归档状态
 - 在卡片里管理“时间管理”子项目，并在勾选完成时记录本地时间戳
 - 自动记录卡片进入待办、进行中、已完成和归档的时间点
 - 保存时自动生成“当前任务状态”，方便大模型读取所有任务的当前情况
@@ -67,6 +67,7 @@ npm run dev
 - ID: card-example-001
 - 当前状态: 待办
 - 完成情况: 卡片未完成；子项目 1/3 已完成
+- 分类: 开发
 - 优先级: high
 - 标签: 解析器, MVP
 - 时间节点:
@@ -82,6 +83,7 @@ npm run dev
 
 ### 写 Markdown 解析器
 <!-- id: card-example-001 -->
+<!-- category: 开发 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
 
@@ -103,6 +105,7 @@ npm run dev
 
 ### 实现拖拽
 <!-- id: card-example-002 -->
+<!-- category: 开发 -->
 <!-- priority: medium -->
 <!-- tags: 交互 -->
 
@@ -112,6 +115,7 @@ npm run dev
 
 ### 确定 MVP 范围
 <!-- id: card-example-003 -->
+<!-- category: 文档 -->
 <!-- priority: low -->
 
 只做本地 Markdown 文件驱动的个人看板。
@@ -142,12 +146,14 @@ npm run dev
 可选元数据：
 
 ```md
+<!-- category: 开发 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
 <!-- column: todo -->
 <!-- archived_at: 2026-05-31T10:30:00+08:00 -->
 ```
 
+- `category` 是下拉选择的分类标签，当前内置：需求、开发、问题、文档、调研、会议、其他。
 - `priority` 使用 `high`、`medium`、`low` 三个机器值，界面显示为高、中、低。
 - `tags` 是逗号分隔的标签。
 - `column` 用于归档卡片恢复时回到原列。

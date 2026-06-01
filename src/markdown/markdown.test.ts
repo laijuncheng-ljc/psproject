@@ -100,6 +100,26 @@ Body without an id comment.
     expect(secondParse.notes).toBe("项目目标：把本地 Markdown 变成项目管理面板。");
   });
 
+  it("includes category metadata in generated task summaries", () => {
+    const board = parseBoardMarkdown(`# 个人看板
+
+## 待办
+
+### 分类卡片
+<!-- id: card-category -->
+<!-- category: 开发 -->
+<!-- tags: 前端 -->
+
+正文内容。
+`);
+    const serialized = serializeBoardMarkdown(board);
+
+    expect(serialized).toContain("<!-- category: 开发 -->");
+    expect(serialized).toContain("- 分类: 开发");
+    expect(serialized).toContain("- 标签: 前端");
+    expect(serialized).toContain("  - 正文: 正文内容。");
+  });
+
   it("ignores generated task summaries when parsing cards", () => {
     const board = parseBoardMarkdown(`# 个人看板
 

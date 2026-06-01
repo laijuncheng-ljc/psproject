@@ -24,7 +24,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
   letter-spacing: 0;
 }
@@ -52,7 +53,8 @@ button:disabled {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid #cdd5e2;
   border-radius: 7px;
@@ -63,7 +65,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgb(37 99 235 / 14%);
 }
@@ -445,6 +448,25 @@ textarea {
 .card-preview-empty {
   color: #9aa5b5;
   font-style: italic;
+}
+
+.card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-chip {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: #eaf7f1;
+  color: #276749;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+  padding: 6px 8px;
 }
 
 .add-card-button {

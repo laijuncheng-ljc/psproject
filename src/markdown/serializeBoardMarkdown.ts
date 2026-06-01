@@ -4,6 +4,7 @@ import {
   getColumnTitle,
 } from "../constants/columns";
 import type { Board, Card } from "../types/board";
+import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { generateCardId } from "../utils/id";
 import {
   formatLocalTimestamp,
@@ -96,6 +97,7 @@ function serializeBoardStatusSummary(board: Board): string {
         `- ID: ${card.id}`,
         `- 当前状态: ${getColumnTitle(card.columnId)}`,
         `- 完成情况: ${card.columnId === "done" ? "卡片已完成" : "卡片未完成"}；${completionText}`,
+        `- 分类: ${metadata.category || "未分类"}`,
         `- 优先级: ${metadata.priority ?? "未设置"}`,
         `- 标签: ${metadata.tags.length > 0 ? metadata.tags.join(", ") : "无"}`,
         "- 时间节点:",
@@ -128,24 +130,10 @@ function trimTrailingBlankLines(value: string): string {
   return value.replace(/\s+$/g, "");
 }
 
-function parseCardMetadata(body: string): { priority: string | null; tags: string[] } {
-  const priorityMatch = /<!--\s*priority:\s*(.+?)\s*-->/.exec(body);
-  const tagsMatch = /<!--\s*tags:\s*(.+?)\s*-->/.exec(body);
-
-  return {
-    priority: priorityMatch?.[1].trim() || null,
-    tags:
-      tagsMatch?.[1]
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean) ?? [],
-  };
-}
-
 function stripMetadataComments(body: string): string {
-  return body
+  return stripCardMetadataComments(body)
     .split("\n")
-    .filter((line) => !/^<!--\s*(priority|tags|column|archived_at):/i.test(line.trim()))
+    .filter((line) => !/^<!--\s*(column|archived_at):/i.test(line.trim()))
     .join("\n")
     .replace(/\s+/g, " ")
     .trim();
