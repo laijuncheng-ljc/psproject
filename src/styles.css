@@ -473,6 +473,10 @@ textarea {
   padding: 18px;
 }
 
+.card-editor > * {
+  flex-shrink: 0;
+}
+
 .editor-header {
   display: flex;
   align-items: center;
