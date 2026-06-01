@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BoardView } from "./components/BoardView";
 import { CardEditor } from "./components/CardEditor";
 import { EmptyState } from "./components/EmptyState";
@@ -28,8 +28,10 @@ const AUTO_BACKUP_ENABLED_KEY = "local-md-kanban:auto-backup-enabled";
 const AUTO_BACKUP_LAST_RUN_KEY = "local-md-kanban:auto-backup-last-run-at";
 const AUTO_BACKUP_INTERVAL_MS = 2 * 60 * 60 * 1000;
 const AUTO_BACKUP_CHECK_MS = 60 * 1000;
+const AUTO_SAVE_DEBOUNCE_MS = 700;
 
 type BackupReason = "manual" | "auto";
+type SaveReason = "manual" | "auto";
 
 function App() {
   const [board, setBoard] = useState<Board | null>(null);
@@ -45,6 +47,7 @@ function App() {
     readStoredBoolean(AUTO_BACKUP_ENABLED_KEY, false),
   );
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const boardRevisionRef = useRef(0);
 
   const selectedCard = useMemo(
     () => (board && selectedCardId ? getCardById(board, selectedCardId) : null),
@@ -62,6 +65,7 @@ function App() {
       setFileName(file.fileName);
       setBoard(parseBoardMarkdown(file.content));
       setBackups(file.backups);
+      boardRevisionRef.current = 0;
       setDirty(false);
       setSelectedCardId(null);
       setStatusMessage("已加载");
@@ -81,10 +85,44 @@ function App() {
   }, [loadBoard]);
 
   const markBoardChanged = useCallback((nextBoard: Board) => {
+    boardRevisionRef.current += 1;
     setBoard(nextBoard);
     setDirty(true);
-    setStatusMessage(null);
+    setStatusMessage("等待自动保存");
   }, []);
+
+  const saveBoardSnapshot = useCallback(
+    async (boardSnapshot: Board, reason: SaveReason) => {
+      const saveRevision = boardRevisionRef.current;
+
+      setError(null);
+      setStatusMessage(reason === "auto" ? "正在自动保存" : "正在保存");
+
+      try {
+        const result = await saveFixedMarkdownFile(
+          serializeBoardMarkdown(boardSnapshot),
+        );
+
+        setFileName(result.fileName);
+
+        if (saveRevision === boardRevisionRef.current) {
+          setDirty(false);
+          setStatusMessage(
+            reason === "auto"
+              ? `已自动保存 ${formatStatusTime(result.savedAt)}`
+              : `已保存 ${formatStatusTime(result.savedAt)}`,
+          );
+        } else {
+          setStatusMessage("等待自动保存");
+        }
+      } catch (caughtError) {
+        setDirty(true);
+        setStatusMessage(reason === "auto" ? "自动保存失败" : "保存失败");
+        setError(toErrorMessage(caughtError, "保存 Markdown 文件失败。"));
+      }
+    },
+    [],
+  );
 
   const handleSave = useCallback(async () => {
     setError(null);
@@ -94,16 +132,20 @@ function App() {
       return;
     }
 
-    try {
-      const result = await saveFixedMarkdownFile(serializeBoardMarkdown(board));
+    await saveBoardSnapshot(board, "manual");
+  }, [board, saveBoardSnapshot]);
 
-      setFileName(result.fileName);
-      setDirty(false);
-      setStatusMessage(`已保存 ${formatStatusTime(result.savedAt)}`);
-    } catch (caughtError) {
-      setError(toErrorMessage(caughtError, "保存 Markdown 文件失败。"));
+  useEffect(() => {
+    if (!dirty || !board || isLoading) {
+      return;
     }
-  }, [board]);
+
+    const timeoutId = window.setTimeout(() => {
+      void saveBoardSnapshot(board, "auto");
+    }, AUTO_SAVE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [board, dirty, isLoading, saveBoardSnapshot]);
 
   const handleCreateBackup = useCallback(
     async (reason: BackupReason = "manual") => {

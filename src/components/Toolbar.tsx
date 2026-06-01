@@ -53,7 +53,7 @@ export function Toolbar({
           onClick={onSave}
           disabled={!canSave}
         >
-          保存
+          立即保存
         </button>
         <details className="backup-history">
           <summary>备份历史</summary>
@@ -92,7 +92,7 @@ function getStatusText(
   }
 
   if (dirty) {
-    return "未保存";
+    return statusMessage ?? "等待自动保存";
   }
 
   return statusMessage ?? "已保存";
