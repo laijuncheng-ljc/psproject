@@ -199,7 +199,7 @@ function App() {
 
     const newCard: Card = {
       id: generateCardId(),
-      title: "未命名卡片",
+      title: "",
       body: appendStageHistory("", columnId),
       columnId,
     };

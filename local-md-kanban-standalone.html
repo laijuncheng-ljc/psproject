@@ -1117,7 +1117,7 @@
           const parsed = extractCardMetadataAndBody(currentBodyLines);
           const card = {
             id: parsed.id || generateCardId(),
-            title: currentTitle || "未命名卡片",
+            title: currentTitle,
             body: parsed.body,
             columnId: parsed.columnId || currentColumnId || "todo",
             priority: normalizePriority(parsed.priority),
@@ -1157,7 +1157,7 @@
             const cardMatch = /^###\s+(.+?)\s*$/.exec(line);
             if (cardMatch && (currentColumnId || inArchive)) {
               flushCard();
-              currentTitle = cardMatch[1].trim() || "未命名卡片";
+              currentTitle = cardMatch[1].trim() || "无标题";
               currentBodyLines = [];
               continue;
             }
@@ -1191,7 +1191,7 @@
 
       function serializeCard(card, archived) {
         const lines = [
-          `### ${sanitizeHeading(card.title, "未命名卡片")}`,
+          `### ${sanitizeHeading(card.title, "无标题")}`,
           `<!-- id: ${card.id.trim() || generateCardId()} -->`,
           `<!-- priority: ${normalizePriority(card.priority)} -->`,
         ];
@@ -1604,7 +1604,7 @@
         if (!board || !selectedCardId) return;
         const card = selectedArchived ? getArchivedCardById(selectedCardId) : getCardById(selectedCardId);
         if (!card) return;
-        card.title = els.editorTitle.value.trim() || "未命名卡片";
+        card.title = els.editorTitle.value.trim();
         card.priority = normalizePriority(els.editorPriority.value);
         card.tags = parseTags(els.editorTags.value);
         card.body = serializeTimeManagement(
@@ -1688,7 +1688,7 @@
         if (!column) return;
         const card = {
           id: generateCardId(),
-          title: "未命名卡片",
+          title: "",
           body: appendStageHistory("", columnId),
           columnId,
           priority: DEFAULT_PRIORITY,

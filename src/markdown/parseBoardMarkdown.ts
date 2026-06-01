@@ -113,7 +113,7 @@ export function parseBoardMarkdown(markdown: string): Board {
 
       if (cardTitleMatch && currentColumnId) {
         flushCurrentCard();
-        currentCardTitle = cardTitleMatch[1].trim() || "未命名卡片";
+        currentCardTitle = cardTitleMatch[1].trim() || "无标题";
         currentCardBodyLines = [];
         continue;
       }

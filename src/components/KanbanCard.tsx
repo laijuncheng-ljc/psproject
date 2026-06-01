@@ -10,6 +10,7 @@ interface KanbanCardProps {
 
 export function KanbanCard({ card, onSelect }: KanbanCardProps) {
   const timeManagement = parseTimeManagementSection(card.body);
+  const title = card.title.trim();
   const preview = timeManagement.body.trim();
   const completedCount = timeManagement.items.filter((item) => item.completed).length;
   const {
@@ -43,7 +44,9 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       {...attributes}
       {...listeners}
     >
-      <span className="card-title">{card.title}</span>
+      <span className={`card-title${title ? "" : " card-title-empty"}`}>
+        {title || "无标题"}
+      </span>
       {preview ? (
         <span className="card-preview">{preview}</span>
       ) : (

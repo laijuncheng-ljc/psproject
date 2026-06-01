@@ -47,7 +47,7 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
 
   function commitAndClose() {
     onSave(card.id, {
-      title: title.trim() || "未命名卡片",
+      title: title.trim(),
       body: serializeTimeManagementSection(body, items, parsedTimeManagement.history),
     });
     onClose();

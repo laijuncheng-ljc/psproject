@@ -425,6 +425,11 @@ textarea {
   line-height: 1.35;
 }
 
+.card-title-empty {
+  color: #9aa5b5;
+  font-style: italic;
+}
+
 .card-preview {
   display: -webkit-box;
   overflow: hidden;

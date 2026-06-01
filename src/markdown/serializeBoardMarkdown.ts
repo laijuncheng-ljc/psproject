@@ -91,7 +91,7 @@ function serializeBoardStatusSummary(board: Board): string {
 
       summaryLines.push(
         "",
-        `#### ${sanitizeHeading(card.title, "未命名卡片")}`,
+        `#### ${sanitizeHeading(card.title, "无标题")}`,
         "",
         `- ID: ${card.id}`,
         `- 当前状态: ${getColumnTitle(card.columnId)}`,
@@ -112,7 +112,7 @@ function serializeBoardStatusSummary(board: Board): string {
 }
 
 function serializeCard(card: Card): string {
-  const title = sanitizeHeading(card.title, "未命名卡片");
+  const title = sanitizeHeading(card.title, "无标题");
   const id = card.id.trim() || generateCardId();
   const body = trimTrailingBlankLines(card.body);
   const header = `### ${title}\n<!-- id: ${id} -->`;
