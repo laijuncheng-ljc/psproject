@@ -1,25 +1,29 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import type { CSSProperties } from "react";
-import type { Card } from "../types/board";
+import type { Board, Card } from "../types/board";
+import { stripCardLinks } from "../utils/cardLinks";
 import {
   getCategoryTone,
   parseCardMetadata,
   stripCardMetadataComments,
 } from "../utils/cardMetadata";
 import { parseTimeManagementSection } from "../utils/timeManagement";
+import { LinkedCardModules } from "./LinkedCardModules";
 
 interface KanbanCardProps {
   card: Card;
+  board: Board;
   onSelect: (cardId: string) => void;
 }
 
 interface StaticKanbanCardProps {
   card: Card;
+  board: Board;
   onSelect: (cardId: string) => void;
 }
 
-export function KanbanCard({ card, onSelect }: KanbanCardProps) {
+export function KanbanCard({ card, board, onSelect }: KanbanCardProps) {
   const categoryTone = getCardCategoryTone(card);
   const {
     attributes,
@@ -53,12 +57,12 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       {...attributes}
       {...listeners}
     >
-      <KanbanCardContent card={card} />
+      <KanbanCardContent card={card} board={board} />
     </button>
   );
 }
 
-export function StaticKanbanCard({ card, onSelect }: StaticKanbanCardProps) {
+export function StaticKanbanCard({ card, board, onSelect }: StaticKanbanCardProps) {
   const categoryTone = getCardCategoryTone(card);
 
   return (
@@ -67,16 +71,18 @@ export function StaticKanbanCard({ card, onSelect }: StaticKanbanCardProps) {
       className={`kanban-card category-${categoryTone}`}
       onClick={() => onSelect(card.id)}
     >
-      <KanbanCardContent card={card} />
+      <KanbanCardContent card={card} board={board} />
     </button>
   );
 }
 
-function KanbanCardContent({ card }: { card: Card }) {
+function KanbanCardContent({ card, board }: { card: Card; board: Board }) {
   const timeManagement = parseTimeManagementSection(card.body);
   const metadata = parseCardMetadata(timeManagement.body);
   const title = card.title.trim();
-  const preview = stripCardMetadataComments(timeManagement.body).trim();
+  const preview = stripCardLinks(
+    stripCardMetadataComments(timeManagement.body),
+  ).trim();
   const completedCount = timeManagement.items.filter((item) => item.completed).length;
   const totalItems = timeManagement.items.length;
   const progressPercent =
@@ -130,6 +136,7 @@ function KanbanCardContent({ card }: { card: Card }) {
           ) : null}
         </span>
       ) : null}
+      <LinkedCardModules board={board} text={timeManagement.body} compact />
     </>
   );
 }

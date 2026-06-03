@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import type { Card, Column, ColumnId } from "../types/board";
+import type { Board, Card, Column, ColumnId } from "../types/board";
 import {
   CARD_CATEGORY_GROUPS,
   getCategoryLabel,
@@ -11,11 +11,12 @@ import {
 import { KanbanCard } from "./KanbanCard";
 
 interface KanbanColumnProps {
+  board: Board;
   column: Column;
   onCardSelect: (cardId: string) => void;
 }
 
-export function KanbanColumn({ column, onCardSelect }: KanbanColumnProps) {
+export function KanbanColumn({ board, column, onCardSelect }: KanbanColumnProps) {
   const groupedCards = getCardGroups(column.cards);
   const { isOver, setNodeRef } = useDroppable({
     id: `column:${column.id}`,
@@ -48,6 +49,7 @@ export function KanbanColumn({ column, onCardSelect }: KanbanColumnProps) {
             groupedCards.visibleGroups.map((group) => (
               <CategoryCardGroup
                 key={group.value || "uncategorized"}
+                board={board}
                 columnId={column.id}
                 group={group}
                 onCardSelect={onCardSelect}
@@ -114,12 +116,14 @@ function CategoryDropTarget({ columnId, group }: CategoryDropTargetProps) {
 }
 
 interface CategoryCardGroupProps {
+  board: Board;
   columnId: ColumnId;
   group: CardGroup;
   onCardSelect: (cardId: string) => void;
 }
 
 function CategoryCardGroup({
+  board,
   columnId,
   group,
   onCardSelect,
@@ -146,7 +150,12 @@ function CategoryCardGroup({
       </div>
       <div className="card-category-list">
         {group.cards.map((card) => (
-          <KanbanCard key={card.id} card={card} onSelect={onCardSelect} />
+          <KanbanCard
+            key={card.id}
+            card={card}
+            board={board}
+            onSelect={onCardSelect}
+          />
         ))}
       </div>
     </section>

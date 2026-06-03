@@ -4,7 +4,8 @@ import {
   loadCardDetailFile,
   saveCardDetailFile,
 } from "../storage/fixedMarkdownFile";
-import type { Card } from "../types/board";
+import type { Board, Card } from "../types/board";
+import { createCardLink } from "../utils/cardLinks";
 import {
   CARD_CATEGORY_OPTIONS,
   parseCardMetadata,
@@ -19,27 +20,32 @@ import {
   type StageHistoryEntry,
   type TimeManagementItem,
 } from "../utils/timeManagement";
+import { LinkedCardModules } from "./LinkedCardModules";
 
 interface CardEditorProps {
   card: Card | null;
+  board: Board | null;
   isArchived: boolean;
   onSave: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
   onDelete: (cardId: string) => void;
   onArchive: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
   onRestore: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
+  onOpenCard: (cardId: string) => void;
   onClose: () => void;
 }
 
 export function CardEditor({
   card,
+  board,
   isArchived,
   onSave,
   onDelete,
   onArchive,
   onRestore,
+  onOpenCard,
   onClose,
 }: CardEditorProps) {
-  if (!card) {
+  if (!card || !board) {
     return null;
   }
 
@@ -47,27 +53,32 @@ export function CardEditor({
     <CardEditorForm
       key={card.id}
       card={card}
+      board={board}
       isArchived={isArchived}
       onSave={onSave}
       onDelete={onDelete}
       onArchive={onArchive}
       onRestore={onRestore}
+      onOpenCard={onOpenCard}
       onClose={onClose}
     />
   );
 }
 
-interface CardEditorFormProps extends Omit<CardEditorProps, "card"> {
+interface CardEditorFormProps extends Omit<CardEditorProps, "card" | "board"> {
   card: Card;
+  board: Board;
 }
 
 function CardEditorForm({
   card,
+  board,
   isArchived,
   onSave,
   onDelete,
   onArchive,
   onRestore,
+  onOpenCard,
   onClose,
 }: CardEditorFormProps) {
   const parsedTimeManagement = parseTimeManagementSection(card.body);
@@ -80,6 +91,7 @@ function CardEditorForm({
   const [detailStatus, setDetailStatus] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isDetailSaving, setIsDetailSaving] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [body, setBody] = useState(
     stripCardMetadataComments(parsedTimeManagement.body),
   );
@@ -211,6 +223,26 @@ function CardEditorForm({
     await saveDetailIfNeeded(true);
   }
 
+  async function handleCopyCardLink() {
+    const link = createCardLink(card.id);
+
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopyStatus("已复制");
+    } catch {
+      setCopyStatus(link);
+    }
+  }
+
+  async function handleOpenLinkedCard(cardId: string) {
+    if (!(await saveDetailIfNeeded())) {
+      return;
+    }
+
+    onSave(card.id, buildCardUpdates());
+    onOpenCard(cardId);
+  }
+
   async function saveDetailIfNeeded(force = false): Promise<boolean> {
     const cleanDetailPath = detailPath.trim();
 
@@ -286,10 +318,20 @@ function CardEditorForm({
     <aside className="card-editor" aria-label="卡片编辑器">
       <div className="editor-header">
         <h2>编辑卡片</h2>
-        <button type="button" className="icon-button" onClick={commitAndClose}>
-          关闭
-        </button>
+        <div className="editor-header-actions">
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => void handleCopyCardLink()}
+          >
+            复制链接
+          </button>
+          <button type="button" className="icon-button" onClick={commitAndClose}>
+            关闭
+          </button>
+        </div>
       </div>
+      {copyStatus ? <p className="copy-link-status">{copyStatus}</p> : null}
       <label>
         <span>标题</span>
         <input value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -311,6 +353,11 @@ function CardEditorForm({
         <span>正文</span>
         <textarea value={body} onChange={(event) => setBody(event.target.value)} />
       </label>
+      <LinkedCardModules
+        board={board}
+        text={body}
+        onCardSelect={(cardId) => void handleOpenLinkedCard(cardId)}
+      />
       <section className="detail-document-panel">
         <div className="detail-document-header">
           <h3>专项文档</h3>

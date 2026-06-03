@@ -4,6 +4,10 @@ import {
   getColumnTitle,
 } from "../constants/columns";
 import type { ArchivedCard, Board, Card } from "../types/board";
+import {
+  serializeLinkedCardsForSummary,
+  stripCardLinks,
+} from "../utils/cardLinks";
 import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { generateCardId } from "../utils/id";
 import {
@@ -113,6 +117,8 @@ function serializeBoardStatusSummary(board: Board): string {
         `  - 正文: ${cleanBody || "无"}`,
         "  - 子项目:",
         ...serializeSubitems(parsedTime.items),
+        "- 关联卡片:",
+        ...serializeLinkedCardsForSummary(board, parsedTime.body),
       );
     }
   }
@@ -149,6 +155,8 @@ function serializeBoardStatusSummary(board: Board): string {
         `  - 正文: ${cleanBody || "无"}`,
         "  - 子项目:",
         ...serializeSubitems(parsedTime.items),
+        "- 关联卡片:",
+        ...serializeLinkedCardsForSummary(board, parsedTime.body),
       );
     }
   }
@@ -200,7 +208,7 @@ function trimTrailingBlankLines(value: string): string {
 }
 
 function stripMetadataComments(body: string): string {
-  return stripCardMetadataComments(body)
+  return stripCardLinks(stripCardMetadataComments(body))
     .split("\n")
     .filter((line) => !/^<!--\s*(column|archived_at):/i.test(line.trim()))
     .join("\n")

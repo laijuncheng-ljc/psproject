@@ -18,6 +18,7 @@ import {
   moveCard,
   updateCardCategoryInBoard,
 } from "../utils/board";
+import { stripCardLinks } from "../utils/cardLinks";
 import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { ArchivePanel } from "./ArchivePanel";
 import { CommandProgressPanel } from "./CommandProgressPanel";
@@ -144,12 +145,14 @@ export function BoardView({
           {board.columns.map((column) => (
             <KanbanColumn
               key={column.id}
+              board={board}
               column={column}
               onCardSelect={onCardSelect}
             />
           ))}
         </div>
         <ArchivePanel
+          board={board}
           archivedCards={board.archivedCards}
           onCardSelect={onCardSelect}
         />
@@ -160,7 +163,7 @@ export function BoardView({
             <span className="card-title">{activeCard.title}</span>
             {activeCard.body.trim() ? (
               <span className="card-preview">
-                {stripCardMetadataComments(activeCard.body).trim()}
+                {stripCardLinks(stripCardMetadataComments(activeCard.body)).trim()}
               </span>
             ) : null}
           </div>

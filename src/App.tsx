@@ -349,11 +349,13 @@ function App() {
       )}
       <CardEditor
         card={selectedCard}
+        board={board}
         isArchived={selectedCardArchived}
         onSave={handleUpdateCard}
         onDelete={handleDeleteCard}
         onArchive={handleArchiveCard}
         onRestore={handleRestoreCard}
+        onOpenCard={setSelectedCardId}
         onClose={() => setSelectedCardId(null)}
       />
       <ProjectNotesEditor

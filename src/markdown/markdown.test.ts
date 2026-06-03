@@ -125,6 +125,45 @@ Body without an id comment.
     expect(serialized).toContain("  - 正文: 正文内容。");
   });
 
+  it("summarizes linked cards while keeping the original Markdown link", () => {
+    const board = parseBoardMarkdown(`# 个人看板
+
+## 待办
+
+### 数据分析需求
+<!-- id: card-analysis -->
+<!-- category: 紧急 -->
+
+需要依托专项卡片推进。
+
+[[card:card-project]]
+
+## 进行中
+
+### 数据专项
+<!-- id: card-project -->
+<!-- category: 专项 -->
+<!-- detail: project-data/details/data-project.md -->
+
+字段口径确认中。
+
+#### 时间管理
+
+##### 子项目
+
+- [x] 确认来源 <!-- completed_at: 2026-06-02T10:00:00+08:00 -->
+- [ ] 输出口径
+`);
+    const serialized = serializeBoardMarkdown(board);
+
+    expect(serialized).toContain("[[card:card-project]]");
+    expect(serialized).toContain("- 关联卡片:");
+    expect(serialized).toContain(
+      "数据专项（card-project，进行中，子项目 1/2，专项文档 project-data/details/data-project.md）",
+    );
+    expect(serialized).toContain("  - 正文: 需要依托专项卡片推进。");
+  });
+
   it("parses and serializes archived cards", () => {
     const board = parseBoardMarkdown(`# 个人看板
 

@@ -1,13 +1,18 @@
 import { useState } from "react";
-import type { ArchivedCard } from "../types/board";
+import type { ArchivedCard, Board } from "../types/board";
 import { StaticKanbanCard } from "./KanbanCard";
 
 interface ArchivePanelProps {
+  board: Board;
   archivedCards: ArchivedCard[];
   onCardSelect: (cardId: string) => void;
 }
 
-export function ArchivePanel({ archivedCards, onCardSelect }: ArchivePanelProps) {
+export function ArchivePanel({
+  board,
+  archivedCards,
+  onCardSelect,
+}: ArchivePanelProps) {
   const [isOpen, setIsOpen] = useState(archivedCards.length > 0);
 
   return (
@@ -28,7 +33,11 @@ export function ArchivePanel({ archivedCards, onCardSelect }: ArchivePanelProps)
                 <span>原状态：{getOriginalColumnLabel(card.originalColumnId)}</span>
                 <span>{card.archivedAt ? `归档于 ${card.archivedAt}` : "未记录归档时间"}</span>
               </div>
-              <StaticKanbanCard card={card} onSelect={onCardSelect} />
+              <StaticKanbanCard
+                card={card}
+                board={board}
+                onSelect={onCardSelect}
+              />
             </div>
           ))}
         </div>
