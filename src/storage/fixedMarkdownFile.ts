@@ -33,6 +33,11 @@ export interface SaveCardDetailFileResult {
   savedAt: string;
 }
 
+export interface SupportMarkdownDoc {
+  path: string;
+  content: string;
+}
+
 const BOARD_API_PATH = "/api/board";
 const BACKUPS_API_PATH = "/api/board/backups";
 const CARD_DETAIL_API_PATH = "/api/card-detail";
@@ -43,10 +48,11 @@ export async function loadFixedMarkdownFile(): Promise<FixedMarkdownFile> {
 
 export async function saveFixedMarkdownFile(
   content: string,
+  supportDocs: SupportMarkdownDoc[] = [],
 ): Promise<SaveFixedMarkdownFileResult> {
   return requestJson<SaveFixedMarkdownFileResult>(BOARD_API_PATH, {
     method: "PUT",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, supportDocs }),
   });
 }
 

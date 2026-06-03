@@ -6,6 +6,9 @@
 <!-- generated: true -->
 
 - 更新时间: 2026-06-02T18:44:41-07:00
+- 数据文件夹: project-data/
+- 资源进度: project-data/resources.md
+- 成就记录: project-data/achievements.md
 - 任务总数: 4
 - 待办: 2
 - 进行中: 1
@@ -35,7 +38,7 @@
 - 当前状态: 待办
 - 完成情况: 卡片未完成；子项目 0/4 已完成
 - 分类: 专项
-- 专项文档: card-details/data-requirements.md
+- 专项文档: project-data/details/data-requirements.md
 - 优先级: high
 - 标签: 数据需求, 数据口径, 交付
 - 时间节点:
@@ -107,7 +110,7 @@
 <!-- category: 专项 -->
 <!-- priority: high -->
 <!-- tags: 数据需求, 数据口径, 交付 -->
-<!-- detail: card-details/data-requirements.md -->
+<!-- detail: project-data/details/data-requirements.md -->
 
 建立项目数据需求的总入口，详细字段、来源、口径和交付物维护在独立 Markdown 文件中。
 

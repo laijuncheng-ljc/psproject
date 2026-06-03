@@ -111,16 +111,16 @@ Body without an id comment.
 <!-- id: card-category -->
 <!-- category: 专项 -->
 <!-- tags: 前端 -->
-<!-- detail: card-details/category-card.md -->
+<!-- detail: project-data/details/category-card.md -->
 
 正文内容。
 `);
     const serialized = serializeBoardMarkdown(board);
 
     expect(serialized).toContain("<!-- category: 专项 -->");
-    expect(serialized).toContain("<!-- detail: card-details/category-card.md -->");
+    expect(serialized).toContain("<!-- detail: project-data/details/category-card.md -->");
     expect(serialized).toContain("- 分类: 专项");
-    expect(serialized).toContain("- 专项文档: card-details/category-card.md");
+    expect(serialized).toContain("- 专项文档: project-data/details/category-card.md");
     expect(serialized).toContain("- 标签: 前端");
     expect(serialized).toContain("  - 正文: 正文内容。");
   });

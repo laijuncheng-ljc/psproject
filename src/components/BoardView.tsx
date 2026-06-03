@@ -20,6 +20,7 @@ import {
 } from "../utils/board";
 import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { ArchivePanel } from "./ArchivePanel";
+import { CommandProgressPanel } from "./CommandProgressPanel";
 import { KanbanColumn } from "./KanbanColumn";
 
 interface BoardViewProps {
@@ -138,6 +139,7 @@ export function BoardView({
       onDragEnd={handleDragEnd}
     >
       <main className="board-shell" aria-label={board.title}>
+        <CommandProgressPanel board={board} />
         <div className="board-columns">
           {board.columns.map((column) => (
             <KanbanColumn

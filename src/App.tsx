@@ -11,6 +11,7 @@ import {
   createFixedMarkdownBackup,
   loadFixedMarkdownFile,
   saveFixedMarkdownFile,
+  type SupportMarkdownDoc,
   type BackupSnapshot,
 } from "./storage/fixedMarkdownFile";
 import type { Board, Card, ColumnId } from "./types/board";
@@ -24,6 +25,11 @@ import {
   updateCardInBoard,
 } from "./utils/board";
 import { generateCardId } from "./utils/id";
+import {
+  serializeAchievementsMarkdown,
+  serializeNotesMarkdown,
+  serializeResourcesMarkdown,
+} from "./utils/gamification";
 import { appendStageHistory } from "./utils/timeManagement";
 
 const DEFAULT_NEW_CARD_COLUMN_ID: ColumnId = "todo";
@@ -113,6 +119,7 @@ function App() {
       try {
         const result = await saveFixedMarkdownFile(
           serializeBoardMarkdown(boardSnapshot),
+          getSupportDocs(boardSnapshot),
         );
 
         setFileName(result.fileName);
@@ -405,6 +412,23 @@ function formatStatusTime(isoTimestamp: string): string {
 
 function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function getSupportDocs(board: Board): SupportMarkdownDoc[] {
+  return [
+    {
+      path: "project-data/notes.md",
+      content: serializeNotesMarkdown(board),
+    },
+    {
+      path: "project-data/resources.md",
+      content: serializeResourcesMarkdown(board),
+    },
+    {
+      path: "project-data/achievements.md",
+      content: serializeAchievementsMarkdown(board),
+    },
+  ];
 }
 
 export default App;

@@ -56,6 +56,9 @@ function serializeBoardStatusSummary(board: Board): string {
     "<!-- generated: true -->",
     "",
     `- 更新时间: ${generatedAt}`,
+    "- 数据文件夹: project-data/",
+    "- 资源进度: project-data/resources.md",
+    "- 成就记录: project-data/achievements.md",
     `- 任务总数: ${cards.length}`,
     ...DEFAULT_COLUMNS.map((columnConfig) => {
       const count =

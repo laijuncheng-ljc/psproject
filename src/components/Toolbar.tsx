@@ -37,8 +37,8 @@ export function Toolbar({
   return (
     <header className="toolbar">
       <div className="toolbar-title">
-        <h1>本地 MD 看板</h1>
-        <span className="file-name">{fileName ?? "board.md"}</span>
+        <h1>机械 MD 看板</h1>
+        <span className="file-name">{fileName ?? "project-data/board.md"}</span>
       </div>
       <div className="toolbar-actions">
         <button type="button" onClick={onAddCard} disabled={!canAddCard}>

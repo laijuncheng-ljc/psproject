@@ -1,23 +1,46 @@
-# 本地 MD 看板
+# 机械 MD 看板
 
-一个只用项目目录里的固定 Markdown 文件管理任务的个人看板工具。
+一个赛博朋克机械风的本地 Markdown 项目看板。下载整个项目文件夹后，核心数据都在 `project-data/` 里，双击启动脚本即可运行。
 
 ## 功能
 
-- 启动后自动读取项目根目录里的 `board.md`
+- 启动后自动读取 `project-data/board.md`
 - 自动解析为“待办 / 进行中 / 已完成”三列
 - 拖拽卡片调整顺序或状态
 - 卡片变多时，各状态列和归档列表会独立滚动
+- 完成任务会累积能量、土地、领地、机械合金、数据核心和成就
 - 新建、编辑、删除卡片
-- 给整个项目记录备注，备注会保存在同一个 `board.md`
+- 给整个项目记录备注，并同步到 `project-data/notes.md`
 - 给卡片设置分类、标签、优先级和归档状态
-- 给内容较长的专项卡片绑定 `card-details/*.md` 独立文档
+- 给内容较长的专项卡片绑定 `project-data/details/*.md` 独立文档
 - 在卡片里管理“时间管理”子项目，并在勾选完成时记录本地时间戳
 - 自动记录卡片进入待办、进行中、已完成和归档的时间点
 - 保存时自动生成“当前任务状态”，方便大模型读取所有任务的当前情况
-- 修改后自动覆盖写回 `board.md`，也可以点“立即保存”手动触发
-- 可选开启每 2 小时自动备份，备份文件会写入 `backups/`
+- 保存时同步刷新 `project-data/resources.md` 和 `project-data/achievements.md`
+- 修改后自动覆盖写回 `project-data/board.md`，也可以点“立即保存”手动触发
+- 可选开启每 2 小时自动备份，备份文件会写入 `project-data/backups/`
 - 没有远程后端、数据库、账号系统或 GitHub 同步
+
+## 数据文件夹
+
+`project-data/` 是项目的数据舱：
+
+- `project-data/board.md`: 看板主数据、任务状态、时间节点和当前状态总览。
+- `project-data/notes.md`: 项目整体备注。
+- `project-data/resources.md`: 由完成卡片和子项目自动计算出的资源进度。
+- `project-data/achievements.md`: 自动生成的成就记录。
+- `project-data/details/*.md`: 专项长文档，例如数据需求、字段口径、方案细节。
+- `project-data/backups/`: 自动备份目录，默认不提交到 Git。
+
+旧版本的根目录 `board.md` 和 `card-details/` 会在启动时自动迁移/兼容到 `project-data/`。
+
+## 资源规则
+
+- 每完成 1 张任务卡片，获得 120 能量和 1 块土地。
+- 每完成 3 张任务卡片，自动合成为 1 个领地。
+- 每完成 1 个子项目，获得 20 能量和 8 机械合金。
+- 每绑定 1 个专项文档，获得 1 个数据核心。
+- 每归档 1 张卡片，获得 30 能量。
 
 ## 推荐用法
 
@@ -30,21 +53,21 @@ npm install
 npm run dev
 ```
 
-页面会自动读取项目根目录里的 `board.md`。修改看板后会自动保存，程序会通过本地服务直接替换这个文件，不会弹出下载窗口；工具栏里的“立即保存”可以作为手动兜底。
+页面会自动读取 `project-data/board.md`。修改看板后会自动保存，程序会通过本地服务直接替换这个文件，不会弹出下载窗口；工具栏里的“立即保存”可以作为手动兜底。
 
-如果 `board.md` 不存在，开发服务会优先从 `example-board.md` 初始化一份；如果示例文件也不存在，会创建一个空看板。
+如果 `project-data/board.md` 不存在，开发服务会优先从旧版根目录 `board.md` 或 `example-board.md` 初始化一份；如果示例文件也不存在，会创建一个空看板。
 
-纯静态 HTML 直接覆盖同目录 `board.md` 会被浏览器安全策略拦截，所以固定文件保存推荐使用上面的双击启动方式。
+纯静态 HTML 直接覆盖本地 Markdown 文件会被浏览器安全策略拦截，所以固定文件保存推荐使用上面的双击启动方式。
 
 ## 备份
 
-工具栏里的“备份历史”可以开启“每 2 小时自动备份”。开启后，页面保持打开时会定时把当前看板内容写入 `backups/board-时间戳.md`。也可以点“立即备份”手动创建备份。
+工具栏里的“备份历史”可以开启“每 2 小时自动备份”。开启后，页面保持打开时会定时把当前看板内容写入 `project-data/backups/board-时间戳.md`。也可以点“立即备份”手动创建备份。
 
-`backups/` 已加入 `.gitignore`，默认不会提交到 Git。
+`project-data/backups/` 已加入 `.gitignore`，默认不会提交到 Git。
 
 ## Markdown 格式
 
-固定文件 `board.md`：
+固定文件 `project-data/board.md`：
 
 ```md
 # 个人看板
@@ -151,7 +174,7 @@ npm run dev
 <!-- category: 专项 -->
 <!-- priority: high -->
 <!-- tags: 解析器, MVP -->
-<!-- detail: card-details/data-requirements.md -->
+<!-- detail: project-data/details/data-requirements.md -->
 <!-- column: todo -->
 <!-- archived_at: 2026-05-31T10:30:00+08:00 -->
 ```
@@ -159,7 +182,7 @@ npm run dev
 - `category` 是下拉选择的列内大模块，当前内置：长期、专项、紧急、其他。看板会在每个状态列里按这些大模块分组显示。
 - `priority` 使用 `high`、`medium`、`low` 三个机器值，界面显示为高、中、低。
 - `tags` 是逗号分隔的标签。
-- `detail` 指向独立专项文档，例如 `card-details/data-requirements.md`；适合放字段口径、数据来源、交付物等长内容。
+- `detail` 指向独立专项文档，例如 `project-data/details/data-requirements.md`；适合放字段口径、数据来源、交付物等长内容。
 - `column` 用于归档卡片恢复时回到原列。
 - `archived_at` 会在归档时自动写入。
 - 归档卡片保存在同一个文件的 `## 归档` 下。

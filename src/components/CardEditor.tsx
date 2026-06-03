@@ -434,7 +434,7 @@ function getStageLabel(stage: StageHistoryEntry["stage"]): string {
 function createDetailPath(card: Card): string {
   const titleSlug = slugify(card.title);
 
-  return `card-details/${titleSlug || card.id}.md`;
+  return `project-data/details/${titleSlug || card.id}.md`;
 }
 
 function createDefaultDetailContent(title: string): string {

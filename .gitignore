@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 backups/
+project-data/backups/
 .tools/
 
 # Editor directories and files

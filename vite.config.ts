@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import process from "node:process";
@@ -8,8 +8,10 @@ import react from "@vitejs/plugin-react";
 
 const BOARD_FILE_NAME = "board.md";
 const EXAMPLE_FILE_NAME = "example-board.md";
+const PROJECT_DATA_DIR_NAME = "project-data";
 const BACKUP_DIR_NAME = "backups";
-const CARD_DETAIL_DIR_NAME = "card-details";
+const LEGACY_CARD_DETAIL_DIR_NAME = "card-details";
+const CARD_DETAIL_DIR_NAME = "details";
 const BOARD_API_PATH = "/api/board";
 const BACKUPS_API_PATH = "/api/board/backups";
 const CARD_DETAIL_API_PATH = "/api/card-detail";
@@ -20,6 +22,11 @@ interface BackupSnapshot {
   path: string;
   createdAt: string;
   size: number;
+}
+
+interface SupportDocPayload {
+  path: string;
+  content: string;
 }
 
 class ApiError extends Error {
@@ -41,9 +48,11 @@ export default defineConfig({
 
 function localBoardFilePlugin(): Plugin {
   const root = process.cwd();
-  const boardFilePath = path.join(root, BOARD_FILE_NAME);
+  const projectDataDirectoryPath = path.join(root, PROJECT_DATA_DIR_NAME);
+  const boardFilePath = path.join(projectDataDirectoryPath, BOARD_FILE_NAME);
+  const legacyBoardFilePath = path.join(root, BOARD_FILE_NAME);
   const exampleFilePath = path.join(root, EXAMPLE_FILE_NAME);
-  const backupDirectoryPath = path.join(root, BACKUP_DIR_NAME);
+  const backupDirectoryPath = path.join(projectDataDirectoryPath, BACKUP_DIR_NAME);
 
   const middleware = (
     request: IncomingMessage,
@@ -62,12 +71,18 @@ function localBoardFilePlugin(): Plugin {
 
     if (url.pathname === BOARD_API_PATH && request.method === "GET") {
       await respond(response, async () => {
-        await ensureBoardFile(boardFilePath, exampleFilePath);
+        await ensureProjectData(
+          projectDataDirectoryPath,
+          boardFilePath,
+          legacyBoardFilePath,
+          exampleFilePath,
+          root,
+        );
         const content = await readFile(boardFilePath, "utf8");
 
         return {
-          fileName: BOARD_FILE_NAME,
-          path: BOARD_FILE_NAME,
+          fileName: `${PROJECT_DATA_DIR_NAME}/${BOARD_FILE_NAME}`,
+          path: `${PROJECT_DATA_DIR_NAME}/${BOARD_FILE_NAME}`,
           content,
           backups: await listBackups(backupDirectoryPath),
         };
@@ -77,14 +92,22 @@ function localBoardFilePlugin(): Plugin {
 
     if (url.pathname === BOARD_API_PATH && request.method === "PUT") {
       await respond(response, async () => {
-        const content = getContentFromBody(await readJsonBody(request));
+        const body = await readJsonBody(request);
+        const content = getContentFromBody(body);
 
-        await ensureBoardFile(boardFilePath, exampleFilePath);
+        await ensureProjectData(
+          projectDataDirectoryPath,
+          boardFilePath,
+          legacyBoardFilePath,
+          exampleFilePath,
+          root,
+        );
         await writeFile(boardFilePath, content, "utf8");
+        await writeSupportDocs(root, getSupportDocsFromBody(body));
 
         return {
-          fileName: BOARD_FILE_NAME,
-          path: BOARD_FILE_NAME,
+          fileName: `${PROJECT_DATA_DIR_NAME}/${BOARD_FILE_NAME}`,
+          path: `${PROJECT_DATA_DIR_NAME}/${BOARD_FILE_NAME}`,
           savedAt: new Date().toISOString(),
         };
       });
@@ -164,10 +187,17 @@ function localBoardFilePlugin(): Plugin {
   };
 }
 
-async function ensureBoardFile(
+async function ensureProjectData(
+  projectDataDirectoryPath: string,
   boardFilePath: string,
+  legacyBoardFilePath: string,
   exampleFilePath: string,
+  root: string,
 ): Promise<void> {
+  await mkdir(path.join(projectDataDirectoryPath, CARD_DETAIL_DIR_NAME), {
+    recursive: true,
+  });
+
   try {
     await readFile(boardFilePath, "utf8");
   } catch (error) {
@@ -176,19 +206,95 @@ async function ensureBoardFile(
     }
 
     try {
-      await copyFile(exampleFilePath, boardFilePath);
-    } catch (copyError) {
-      if (!hasCode(copyError, "ENOENT")) {
-        throw copyError;
+      const legacyBoard = await readFile(legacyBoardFilePath, "utf8");
+      await writeFile(boardFilePath, rewriteLegacyDetailPaths(legacyBoard), "utf8");
+    } catch (legacyError) {
+      if (!hasCode(legacyError, "ENOENT")) {
+        throw legacyError;
       }
 
-      await writeFile(
-        boardFilePath,
-        "# 个人看板\n\n## 待办\n\n## 进行中\n\n## 已完成\n",
-        "utf8",
-      );
+      try {
+        const exampleBoard = await readFile(exampleFilePath, "utf8");
+        await writeFile(boardFilePath, rewriteLegacyDetailPaths(exampleBoard), "utf8");
+      } catch (copyError) {
+        if (!hasCode(copyError, "ENOENT")) {
+          throw copyError;
+        }
+
+        await writeFile(
+          boardFilePath,
+          "# 个人看板\n\n## 项目备注\n\n## 待办\n\n## 进行中\n\n## 已完成\n\n## 归档\n",
+          "utf8",
+        );
+      }
     }
   }
+
+  await migrateLegacyDetails(root, projectDataDirectoryPath);
+  await ensureSupportDoc(
+    path.join(projectDataDirectoryPath, "notes.md"),
+    "# 项目备注\n\n记录项目目标、背景、阶段性结论和风险。\n",
+  );
+  await ensureSupportDoc(
+    path.join(projectDataDirectoryPath, "resources.md"),
+    "# 资源进度\n\n保存看板后会自动生成。\n",
+  );
+  await ensureSupportDoc(
+    path.join(projectDataDirectoryPath, "achievements.md"),
+    "# 成就记录\n\n保存看板后会自动生成。\n",
+  );
+}
+
+async function writeSupportDocs(
+  root: string,
+  supportDocs: SupportDocPayload[],
+): Promise<void> {
+  for (const supportDoc of supportDocs) {
+    const supportDocPath = normalizeSupportDocPath(supportDoc.path);
+    const fullPath = path.join(root, supportDocPath);
+
+    await mkdir(path.dirname(fullPath), { recursive: true });
+    await writeFile(fullPath, supportDoc.content, "utf8");
+  }
+}
+
+async function ensureSupportDoc(filePath: string, fallbackContent: string) {
+  try {
+    await readFile(filePath, "utf8");
+  } catch (error) {
+    if (!hasCode(error, "ENOENT")) {
+      throw error;
+    }
+
+    await writeFile(filePath, fallbackContent, "utf8");
+  }
+}
+
+async function migrateLegacyDetails(
+  root: string,
+  projectDataDirectoryPath: string,
+): Promise<void> {
+  const legacyDetailPath = path.join(root, LEGACY_CARD_DETAIL_DIR_NAME);
+  const detailDirectoryPath = path.join(projectDataDirectoryPath, CARD_DETAIL_DIR_NAME);
+
+  try {
+    await cp(legacyDetailPath, detailDirectoryPath, {
+      recursive: true,
+      force: false,
+      errorOnExist: false,
+    });
+  } catch (error) {
+    if (!hasCode(error, "ENOENT")) {
+      throw error;
+    }
+  }
+}
+
+function rewriteLegacyDetailPaths(content: string): string {
+  return content.replace(
+    new RegExp(`${LEGACY_CARD_DETAIL_DIR_NAME}/`, "g"),
+    `${PROJECT_DATA_DIR_NAME}/${CARD_DETAIL_DIR_NAME}/`,
+  );
 }
 
 async function writeBackup(
@@ -297,6 +403,52 @@ function getPathFromBody(body: unknown): string {
   return filePath;
 }
 
+function getSupportDocsFromBody(body: unknown): SupportDocPayload[] {
+  if (typeof body !== "object" || body === null || !("supportDocs" in body)) {
+    return [];
+  }
+
+  const supportDocs = (body as { supportDocs?: unknown }).supportDocs;
+
+  if (!Array.isArray(supportDocs)) {
+    throw new ApiError(400, "辅助 Markdown 文档格式不正确。");
+  }
+
+  return supportDocs.map((supportDoc) => {
+    if (
+      typeof supportDoc !== "object" ||
+      supportDoc === null ||
+      typeof (supportDoc as { path?: unknown }).path !== "string" ||
+      typeof (supportDoc as { content?: unknown }).content !== "string"
+    ) {
+      throw new ApiError(400, "辅助 Markdown 文档内容不正确。");
+    }
+
+    return {
+      path: (supportDoc as { path: string }).path,
+      content: (supportDoc as { content: string }).content,
+    };
+  });
+}
+
+function normalizeSupportDocPath(rawPath: string): string {
+  const normalizedPath = path.posix.normalize(rawPath.trim().replace(/\\/g, "/"));
+  const supportPath = normalizedPath.startsWith(`${PROJECT_DATA_DIR_NAME}/`)
+    ? normalizedPath
+    : `${PROJECT_DATA_DIR_NAME}/${normalizedPath}`;
+  const allowedPaths = new Set([
+    `${PROJECT_DATA_DIR_NAME}/notes.md`,
+    `${PROJECT_DATA_DIR_NAME}/resources.md`,
+    `${PROJECT_DATA_DIR_NAME}/achievements.md`,
+  ]);
+
+  if (!allowedPaths.has(supportPath)) {
+    throw new ApiError(400, "辅助 Markdown 文档只能写入 project-data 的核心文件。");
+  }
+
+  return supportPath;
+}
+
 function normalizeCardDetailPath(rawPath: string | null): string {
   const cleanPath = (rawPath ?? "").trim().replace(/\\/g, "/");
 
@@ -305,18 +457,28 @@ function normalizeCardDetailPath(rawPath: string | null): string {
   }
 
   const normalizedPath = path.posix.normalize(cleanPath);
-  const detailPath = normalizedPath.startsWith(`${CARD_DETAIL_DIR_NAME}/`)
-    ? normalizedPath
-    : `${CARD_DETAIL_DIR_NAME}/${normalizedPath}`;
+  const legacyPrefix = `${LEGACY_CARD_DETAIL_DIR_NAME}/`;
+  const projectDetailPrefix = `${PROJECT_DATA_DIR_NAME}/${CARD_DETAIL_DIR_NAME}/`;
+  let detailPath = normalizedPath;
+
+  if (detailPath.startsWith(legacyPrefix)) {
+    detailPath = `${projectDetailPrefix}${detailPath.slice(legacyPrefix.length)}`;
+  } else if (detailPath.startsWith(`${CARD_DETAIL_DIR_NAME}/`)) {
+    detailPath = `${PROJECT_DATA_DIR_NAME}/${detailPath}`;
+  } else if (!detailPath.startsWith(projectDetailPrefix)) {
+    detailPath = `${projectDetailPrefix}${detailPath}`;
+  }
+
   const segments = detailPath.split("/");
 
   if (
-    segments[0] !== CARD_DETAIL_DIR_NAME ||
+    segments[0] !== PROJECT_DATA_DIR_NAME ||
+    segments[1] !== CARD_DETAIL_DIR_NAME ||
     segments.some((segment) => segment === "" || segment === "." || segment === "..") ||
     path.posix.isAbsolute(detailPath) ||
     !detailPath.endsWith(".md")
   ) {
-    throw new ApiError(400, "专项文档必须放在 card-details/ 目录下，并使用 .md 后缀。");
+    throw new ApiError(400, "专项文档必须放在 project-data/details/ 目录下，并使用 .md 后缀。");
   }
 
   return segments.join("/");
