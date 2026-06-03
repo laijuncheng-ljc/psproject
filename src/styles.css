@@ -329,7 +329,7 @@ textarea {
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  min-height: 88px;
+  min-height: 112px;
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
@@ -355,7 +355,7 @@ textarea {
 .digging-scene {
   position: relative;
   width: min(100%, 620px);
-  height: 68px;
+  height: 92px;
 }
 
 .digging-ground {
@@ -394,7 +394,7 @@ textarea {
 .digging-pit {
   position: absolute;
   right: 28%;
-  bottom: 6px;
+  bottom: 8px;
   width: clamp(86px, 18vw, 132px);
   height: var(--dig-depth);
   overflow: hidden;
@@ -417,100 +417,28 @@ textarea {
 
 .digging-worker {
   position: absolute;
-  right: calc(28% + 82px);
-  bottom: 22px;
-  width: 42px;
-  height: 46px;
+  right: calc(28% + 52px);
+  bottom: -13px;
+  width: 126px;
+  height: 126px;
   animation: worker-bob 900ms ease-in-out infinite;
 }
 
-.worker-head {
-  position: absolute;
-  top: 0;
-  left: 14px;
-  width: 15px;
-  height: 15px;
-  border: 2px solid #ffcf79;
-  border-radius: 50%;
-  background: #f7b955;
-  box-shadow: 0 0 10px rgb(255 199 97 / 30%);
-}
-
-.worker-head::before {
-  position: absolute;
-  top: -5px;
-  left: -3px;
-  width: 21px;
-  height: 8px;
-  border-radius: 999px 999px 4px 4px;
-  background: #44e8ff;
-  content: "";
-}
-
-.worker-body {
-  position: absolute;
-  top: 17px;
-  left: 15px;
-  width: 14px;
-  height: 21px;
-  border-radius: 5px;
-  background: linear-gradient(180deg, #ff4ecb, #8b5cf6);
-}
-
-.worker-arm,
-.worker-leg,
-.worker-shovel {
-  position: absolute;
+.digging-worker img {
   display: block;
-  transform-origin: 6px 2px;
-}
-
-.worker-arm {
-  top: 23px;
-  left: 8px;
-  width: 26px;
-  height: 5px;
-  border-radius: 999px;
-  background: #f7b955;
-  animation: shovel-swing 900ms ease-in-out infinite;
-}
-
-.worker-leg {
-  top: 36px;
-  left: 13px;
-  width: 22px;
-  height: 5px;
-  border-radius: 999px;
-  background: #5eeeff;
-  transform: rotate(16deg);
-}
-
-.worker-shovel {
-  top: 25px;
-  left: 26px;
-  width: 30px;
-  height: 4px;
-  border-radius: 999px;
-  background: #d7e7f6;
-  animation: shovel-swing 900ms ease-in-out infinite;
-}
-
-.worker-shovel::after {
-  position: absolute;
-  right: -7px;
-  bottom: -5px;
-  width: 10px;
-  height: 12px;
-  border-radius: 2px 2px 8px 8px;
-  background: #91a9bc;
-  content: "";
-  transform: rotate(18deg);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 10px rgb(0 229 255 / 30%))
+    drop-shadow(0 8px 14px rgb(0 0 0 / 42%));
+  transform: translateZ(0);
 }
 
 .digging-chip {
   position: absolute;
   right: calc(28% + 10px);
-  bottom: 48px;
+  bottom: 68px;
   display: inline-flex;
   min-width: 24px;
   height: 22px;
@@ -532,17 +460,6 @@ textarea {
 
   50% {
     transform: translateY(3px);
-  }
-}
-
-@keyframes shovel-swing {
-  0%,
-  100% {
-    transform: rotate(-24deg);
-  }
-
-  50% {
-    transform: rotate(28deg);
   }
 }
 

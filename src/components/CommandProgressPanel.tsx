@@ -28,11 +28,7 @@ export function CommandProgressPanel({ board }: CommandProgressPanelProps) {
           <span />
         </div>
         <div className="digging-worker">
-          <span className="worker-head" />
-          <span className="worker-body" />
-          <span className="worker-arm" />
-          <span className="worker-leg" />
-          <span className="worker-shovel" />
+          <img src="/assets/cyber-lobster-miner.png" alt="" />
         </div>
         <span className="digging-chip">{model.digDepth}</span>
       </div>
