@@ -85,11 +85,14 @@ done
 
 URL="http://${KANBAN_HOST}:${PORT}/"
 
-echo "Starting local kanban at ${URL}"
+echo "Preparing the one-click kanban app..."
+run_npm run build
+
+echo "Opening kanban at ${URL}"
 echo "Leave this window open while you use the app."
 
 if [ "${OPEN_BROWSER:-1}" != "0" ]; then
   (sleep 2 && open "$URL" >/dev/null 2>&1) &
 fi
 
-"$NODE_BIN" ./node_modules/vite/bin/vite.js --host "$KANBAN_HOST" --port "$PORT"
+"$NODE_BIN" ./node_modules/vite/bin/vite.js preview --host "$KANBAN_HOST" --port "$PORT"
