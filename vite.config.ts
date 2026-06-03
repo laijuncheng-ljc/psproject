@@ -1,5 +1,13 @@
 import { Buffer } from "node:buffer";
-import { cp, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import type { Dirent } from "node:fs";
+import {
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import process from "node:process";
@@ -40,6 +48,7 @@ class ApiError extends Error {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.GITHUB_PAGES === "true" ? "/psproject/" : "/",
   plugins: [react(), localBoardFilePlugin()],
   build: {
     cssMinify: false,
@@ -184,7 +193,63 @@ function localBoardFilePlugin(): Plugin {
     configurePreviewServer(server) {
       server.middlewares.use(middleware);
     },
+    async generateBundle() {
+      await emitProjectDataAssets(root, (fileName, source) => {
+        this.emitFile({
+          type: "asset",
+          fileName,
+          source,
+        });
+      });
+    },
   };
+}
+
+async function emitProjectDataAssets(
+  root: string,
+  emitAsset: (fileName: string, source: string) => void,
+): Promise<void> {
+  const projectDataDirectoryPath = path.join(root, PROJECT_DATA_DIR_NAME);
+
+  await emitDirectoryAssets(projectDataDirectoryPath, PROJECT_DATA_DIR_NAME, emitAsset);
+}
+
+async function emitDirectoryAssets(
+  directoryPath: string,
+  outputPrefix: string,
+  emitAsset: (fileName: string, source: string) => void,
+): Promise<void> {
+  let entries: Dirent<string>[];
+
+  try {
+    entries = await readdir(directoryPath, { withFileTypes: true });
+  } catch (error) {
+    if (hasCode(error, "ENOENT")) {
+      return;
+    }
+
+    throw error;
+  }
+
+  for (const entry of entries) {
+    if (entry.name === BACKUP_DIR_NAME || entry.name.startsWith(".")) {
+      continue;
+    }
+
+    const filePath = path.join(directoryPath, entry.name);
+    const outputPath = `${outputPrefix}/${entry.name}`;
+
+    if (entry.isDirectory()) {
+      await emitDirectoryAssets(filePath, outputPath, emitAsset);
+      continue;
+    }
+
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    emitAsset(outputPath, await readFile(filePath, "utf8"));
+  }
 }
 
 async function ensureProjectData(
@@ -237,11 +302,11 @@ async function ensureProjectData(
   );
   await ensureSupportDoc(
     path.join(projectDataDirectoryPath, "resources.md"),
-    "# 资源进度\n\n保存看板后会自动生成。\n",
+    "# 挖坑进度\n\n保存看板后会自动生成。\n",
   );
   await ensureSupportDoc(
     path.join(projectDataDirectoryPath, "achievements.md"),
-    "# 成就记录\n\n保存看板后会自动生成。\n",
+    "# 挖坑记录\n\n保存看板后会自动生成。\n",
   );
 }
 

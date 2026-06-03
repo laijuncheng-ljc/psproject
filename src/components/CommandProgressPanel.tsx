@@ -8,6 +8,7 @@ interface CommandProgressPanelProps {
 
 export function CommandProgressPanel({ board }: CommandProgressPanelProps) {
   const model = calculateResourceModel(board);
+  const minerImagePath = `${import.meta.env.BASE_URL}assets/cyber-lobster-miner.png`;
   const diggingStyle = {
     "--dig-depth": `${Math.min(82, 18 + model.digDepth * 8)}px`,
   } as CSSProperties;
@@ -33,7 +34,7 @@ export function CommandProgressPanel({ board }: CommandProgressPanelProps) {
           <span />
         </div>
         <div className="digging-worker">
-          <img src="/assets/cyber-lobster-miner.png" alt="" />
+          <img src={minerImagePath} alt="" />
         </div>
         <div className="digging-debris">
           <span />

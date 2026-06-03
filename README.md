@@ -43,6 +43,12 @@
 
 ## 推荐用法
 
+线上版：
+
+[https://laijuncheng-ljc.github.io/psproject/](https://laijuncheng-ljc.github.io/psproject/)
+
+线上版会读取随项目发布的 `project-data/board.md`。浏览器不能直接覆盖 GitHub 仓库里的 Markdown 文件，所以线上编辑会先保存到当前浏览器；要直接替换项目文件夹里的 Markdown，请使用下面的本地一键运行。
+
 macOS 可以直接双击项目根目录里的 `start-kanban.command`。它会自动安装依赖、构建生产版页面、启动本机读写通道，并打开浏览器里的看板页面。你不需要手动发布、本地部署或输入命令。
 
 这个本机读写通道只跑在自己的电脑上，用来让浏览器安全地读写 `project-data/board.md`、专项文档和备份文件；关闭终端窗口后，看板页面就会停止运行。
