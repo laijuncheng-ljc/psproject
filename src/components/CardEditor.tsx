@@ -18,12 +18,23 @@ import {
 
 interface CardEditorProps {
   card: Card | null;
+  isArchived: boolean;
   onSave: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
   onDelete: (cardId: string) => void;
+  onArchive: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
+  onRestore: (cardId: string, updates: Pick<Card, "title" | "body">) => void;
   onClose: () => void;
 }
 
-export function CardEditor({ card, onSave, onDelete, onClose }: CardEditorProps) {
+export function CardEditor({
+  card,
+  isArchived,
+  onSave,
+  onDelete,
+  onArchive,
+  onRestore,
+  onClose,
+}: CardEditorProps) {
   if (!card) {
     return null;
   }
@@ -32,8 +43,11 @@ export function CardEditor({ card, onSave, onDelete, onClose }: CardEditorProps)
     <CardEditorForm
       key={card.id}
       card={card}
+      isArchived={isArchived}
       onSave={onSave}
       onDelete={onDelete}
+      onArchive={onArchive}
+      onRestore={onRestore}
       onClose={onClose}
     />
   );
@@ -43,7 +57,15 @@ interface CardEditorFormProps extends Omit<CardEditorProps, "card"> {
   card: Card;
 }
 
-function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps) {
+function CardEditorForm({
+  card,
+  isArchived,
+  onSave,
+  onDelete,
+  onArchive,
+  onRestore,
+  onClose,
+}: CardEditorFormProps) {
   const parsedTimeManagement = parseTimeManagementSection(card.body);
   const cardMetadata = parseCardMetadata(parsedTimeManagement.body);
   const [title, setTitle] = useState(card.title);
@@ -60,20 +82,24 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
     ? CARD_CATEGORY_OPTIONS
     : [...CARD_CATEGORY_OPTIONS, { value: category, label: category }];
 
-  function commitAndClose() {
+  function buildCardUpdates(): Pick<Card, "title" | "body"> {
     const bodyWithMetadata = serializeCardMetadata(
       { ...cardMetadata, category },
       body,
     );
 
-    onSave(card.id, {
+    return {
       title: title.trim(),
       body: serializeTimeManagementSection(
         bodyWithMetadata,
         items,
         parsedTimeManagement.history,
       ),
-    });
+    };
+  }
+
+  function commitAndClose() {
+    onSave(card.id, buildCardUpdates());
     onClose();
   }
 
@@ -81,6 +107,16 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
     if (window.confirm("删除这张卡片？")) {
       onDelete(card.id);
     }
+  }
+
+  function handleArchive() {
+    onArchive(card.id, buildCardUpdates());
+    onClose();
+  }
+
+  function handleRestore() {
+    onRestore(card.id, buildCardUpdates());
+    onClose();
   }
 
   function handleItemToggle(itemId: string, completed: boolean) {
@@ -191,6 +227,15 @@ function CardEditorForm({ card, onSave, onDelete, onClose }: CardEditorFormProps
         <button type="button" className="button-danger" onClick={handleDelete}>
           删除
         </button>
+        {isArchived ? (
+          <button type="button" onClick={handleRestore}>
+            恢复
+          </button>
+        ) : (
+          <button type="button" onClick={handleArchive}>
+            归档
+          </button>
+        )}
         <button type="button" className="button-primary" onClick={commitAndClose}>
           完成
         </button>

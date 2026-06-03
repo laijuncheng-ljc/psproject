@@ -3,7 +3,7 @@ import {
   DEFAULT_COLUMNS,
   getColumnTitle,
 } from "../constants/columns";
-import type { Board, Card } from "../types/board";
+import type { ArchivedCard, Board, Card } from "../types/board";
 import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
 import { generateCardId } from "../utils/id";
 import {
@@ -30,6 +30,8 @@ export function serializeBoardMarkdown(board: Board): string {
 
     sections.push(columnBody);
   }
+
+  sections.push(serializeArchive(board.archivedCards ?? []));
 
   return `${sections.join("\n\n")}\n`;
 }
@@ -62,6 +64,7 @@ function serializeBoardStatusSummary(board: Board): string {
 
       return `- ${columnConfig.title}: ${count}`;
     }),
+    `- 归档: ${board.archivedCards?.length ?? 0}`,
   ];
 
   if (cards.length === 0) {
@@ -110,7 +113,50 @@ function serializeBoardStatusSummary(board: Board): string {
     }
   }
 
+  if ((board.archivedCards?.length ?? 0) > 0) {
+    summaryLines.push("", "### 状态：归档");
+
+    for (const card of board.archivedCards) {
+      const parsedTime = parseTimeManagementSection(card.body);
+      const metadata = parseCardMetadata(card.body);
+      const completedItems = parsedTime.items.filter((item) => item.completed).length;
+      const completionText =
+        parsedTime.items.length > 0
+          ? `子项目 ${completedItems}/${parsedTime.items.length} 已完成`
+          : "无子项目记录";
+      const cleanBody = stripMetadataComments(parsedTime.body);
+
+      summaryLines.push(
+        "",
+        `#### ${sanitizeHeading(card.title, "无标题")}`,
+        "",
+        `- ID: ${card.id}`,
+        "- 当前状态: 归档",
+        `- 原状态: ${getColumnTitle(card.originalColumnId)}`,
+        `- 归档时间: ${card.archivedAt ?? "未记录"}`,
+        `- 完成情况: 卡片已归档；${completionText}`,
+        `- 分类: ${metadata.category || "未分类"}`,
+        `- 优先级: ${metadata.priority ?? "未设置"}`,
+        `- 标签: ${metadata.tags.length > 0 ? metadata.tags.join(", ") : "无"}`,
+        "- 时间节点:",
+        ...serializeStageHistory(parsedTime.history),
+        "- 相关细节:",
+        `  - 正文: ${cleanBody || "无"}`,
+        "  - 子项目:",
+        ...serializeSubitems(parsedTime.items),
+      );
+    }
+  }
+
   return summaryLines.join("\n");
+}
+
+function serializeArchive(cards: ArchivedCard[]): string {
+  const cardBlocks = cards.map((card) => serializeArchivedCard(card));
+
+  return cardBlocks.length > 0
+    ? `## 归档\n\n${cardBlocks.join("\n\n")}`
+    : "## 归档";
 }
 
 function serializeCard(card: Card): string {
@@ -118,6 +164,24 @@ function serializeCard(card: Card): string {
   const id = card.id.trim() || generateCardId();
   const body = trimTrailingBlankLines(card.body);
   const header = `### ${title}\n<!-- id: ${id} -->`;
+
+  return body ? `${header}\n\n${body}` : header;
+}
+
+function serializeArchivedCard(card: ArchivedCard): string {
+  const title = sanitizeHeading(card.title, "无标题");
+  const id = card.id.trim() || generateCardId();
+  const body = trimTrailingBlankLines(card.body);
+  const metadataLines = [
+    `<!-- id: ${id} -->`,
+    `<!-- column: ${card.originalColumnId} -->`,
+  ];
+
+  if (card.archivedAt) {
+    metadataLines.push(`<!-- archived_at: ${card.archivedAt} -->`);
+  }
+
+  const header = `### ${title}\n${metadataLines.join("\n")}`;
 
   return body ? `${header}\n\n${body}` : header;
 }

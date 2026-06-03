@@ -14,19 +14,13 @@ interface KanbanCardProps {
   onSelect: (cardId: string) => void;
 }
 
+interface StaticKanbanCardProps {
+  card: Card;
+  onSelect: (cardId: string) => void;
+}
+
 export function KanbanCard({ card, onSelect }: KanbanCardProps) {
-  const timeManagement = parseTimeManagementSection(card.body);
-  const metadata = parseCardMetadata(timeManagement.body);
-  const title = card.title.trim();
-  const categoryTone = getCategoryTone(metadata.category);
-  const preview = stripCardMetadataComments(timeManagement.body).trim();
-  const completedCount = timeManagement.items.filter((item) => item.completed).length;
-  const totalItems = timeManagement.items.length;
-  const progressPercent =
-    totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
-  const priority = normalizePriority(metadata.priority);
-  const visibleTags = metadata.tags.slice(0, 2);
-  const hiddenTagCount = Math.max(0, metadata.tags.length - visibleTags.length);
+  const categoryTone = getCardCategoryTone(card);
   const {
     attributes,
     listeners,
@@ -42,14 +36,10 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       columnId: card.columnId,
     },
   });
-
   const dragStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  const progressStyle = {
-    "--progress": `${progressPercent}%`,
-  } as CSSProperties;
 
   return (
     <button
@@ -63,6 +53,43 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
       {...attributes}
       {...listeners}
     >
+      <KanbanCardContent card={card} />
+    </button>
+  );
+}
+
+export function StaticKanbanCard({ card, onSelect }: StaticKanbanCardProps) {
+  const categoryTone = getCardCategoryTone(card);
+
+  return (
+    <button
+      type="button"
+      className={`kanban-card category-${categoryTone}`}
+      onClick={() => onSelect(card.id)}
+    >
+      <KanbanCardContent card={card} />
+    </button>
+  );
+}
+
+function KanbanCardContent({ card }: { card: Card }) {
+  const timeManagement = parseTimeManagementSection(card.body);
+  const metadata = parseCardMetadata(timeManagement.body);
+  const title = card.title.trim();
+  const preview = stripCardMetadataComments(timeManagement.body).trim();
+  const completedCount = timeManagement.items.filter((item) => item.completed).length;
+  const totalItems = timeManagement.items.length;
+  const progressPercent =
+    totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+  const priority = normalizePriority(metadata.priority);
+  const visibleTags = metadata.tags.slice(0, 2);
+  const hiddenTagCount = Math.max(0, metadata.tags.length - visibleTags.length);
+  const progressStyle = {
+    "--progress": `${progressPercent}%`,
+  } as CSSProperties;
+
+  return (
+    <>
       <span className={`card-title${title ? "" : " card-title-empty"}`}>
         {title || "无标题"}
       </span>
@@ -96,8 +123,15 @@ export function KanbanCard({ card, onSelect }: KanbanCardProps) {
           ) : null}
         </span>
       ) : null}
-    </button>
+    </>
   );
+}
+
+function getCardCategoryTone(card: Card): ReturnType<typeof getCategoryTone> {
+  const timeManagement = parseTimeManagementSection(card.body);
+  const metadata = parseCardMetadata(timeManagement.body);
+
+  return getCategoryTone(metadata.category);
 }
 
 function normalizePriority(priority: string | null): "high" | "medium" | "low" | null {

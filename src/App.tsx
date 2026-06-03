@@ -16,8 +16,11 @@ import {
 import type { Board, Card, ColumnId } from "./types/board";
 import {
   addCardToBoard,
+  archiveCardInBoard,
   deleteCardFromBoard,
+  getArchivedCardById,
   getCardById,
+  restoreCardInBoard,
   updateCardInBoard,
 } from "./utils/board";
 import { generateCardId } from "./utils/id";
@@ -50,7 +53,16 @@ function App() {
   const boardRevisionRef = useRef(0);
 
   const selectedCard = useMemo(
-    () => (board && selectedCardId ? getCardById(board, selectedCardId) : null),
+    () =>
+      board && selectedCardId
+        ? getCardById(board, selectedCardId) ??
+          getArchivedCardById(board, selectedCardId)
+        : null,
+    [board, selectedCardId],
+  );
+  const selectedCardArchived = useMemo(
+    () =>
+      Boolean(board && selectedCardId && getArchivedCardById(board, selectedCardId)),
     [board, selectedCardId],
   );
 
@@ -267,6 +279,28 @@ function App() {
     setSelectedCardId(null);
   }
 
+  function handleArchiveCard(cardId: string, updates: Pick<Card, "title" | "body">) {
+    if (!board) {
+      return;
+    }
+
+    markBoardChanged(
+      archiveCardInBoard(updateCardInBoard(board, cardId, updates), cardId),
+    );
+    setSelectedCardId(null);
+  }
+
+  function handleRestoreCard(cardId: string, updates: Pick<Card, "title" | "body">) {
+    if (!board) {
+      return;
+    }
+
+    markBoardChanged(
+      restoreCardInBoard(updateCardInBoard(board, cardId, updates), cardId),
+    );
+    setSelectedCardId(null);
+  }
+
   function handleUpdateNotes(notes: string) {
     if (!board) {
       return;
@@ -308,8 +342,11 @@ function App() {
       )}
       <CardEditor
         card={selectedCard}
+        isArchived={selectedCardArchived}
         onSave={handleUpdateCard}
         onDelete={handleDeleteCard}
+        onArchive={handleArchiveCard}
+        onRestore={handleRestoreCard}
         onClose={() => setSelectedCardId(null)}
       />
       <ProjectNotesEditor

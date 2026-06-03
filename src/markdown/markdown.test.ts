@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moveCard } from "../utils/board";
+import { archiveCardInBoard, moveCard, restoreCardInBoard } from "../utils/board";
 import { parseBoardMarkdown } from "./parseBoardMarkdown";
 import { serializeBoardMarkdown } from "./serializeBoardMarkdown";
 
@@ -42,6 +42,7 @@ describe("Markdown board parser and serializer", () => {
     expect(board.title).toBe("个人看板");
     expect(board.notes).toBe("项目目标：把本地 Markdown 变成项目管理面板。");
     expect(board.columns).toHaveLength(3);
+    expect(board.archivedCards).toHaveLength(0);
     expect(board.columns[0].cards).toHaveLength(2);
     expect(board.columns[0].cards[0]).toMatchObject({
       id: "card-20260531-001",
@@ -63,6 +64,7 @@ describe("Markdown board parser and serializer", () => {
       "已完成",
     ]);
     expect(board.columns.every((column) => column.cards.length === 0)).toBe(true);
+    expect(board.archivedCards).toEqual([]);
   });
 
   it("keeps compatibility with old English column headings", () => {
@@ -118,6 +120,47 @@ Body without an id comment.
     expect(serialized).toContain("- 分类: 专项");
     expect(serialized).toContain("- 标签: 前端");
     expect(serialized).toContain("  - 正文: 正文内容。");
+  });
+
+  it("parses and serializes archived cards", () => {
+    const board = parseBoardMarkdown(`# 个人看板
+
+## 已完成
+
+### 当前卡片
+<!-- id: active-card -->
+
+正文。
+
+## 归档
+
+### 历史卡片
+<!-- id: archived-card -->
+<!-- column: doing -->
+<!-- archived_at: 2026-06-02T10:00:00-07:00 -->
+<!-- category: 长期 -->
+
+历史正文。
+`);
+    const serialized = serializeBoardMarkdown(board);
+    const reparsed = parseBoardMarkdown(serialized);
+
+    expect(board.archivedCards).toHaveLength(1);
+    expect(board.archivedCards[0]).toMatchObject({
+      id: "archived-card",
+      title: "历史卡片",
+      body: "<!-- category: 长期 -->\n\n历史正文。",
+      columnId: "doing",
+      originalColumnId: "doing",
+      archivedAt: "2026-06-02T10:00:00-07:00",
+    });
+    expect(serialized).toContain("## 归档");
+    expect(serialized).toContain("<!-- column: doing -->");
+    expect(serialized).toContain("<!-- archived_at: 2026-06-02T10:00:00-07:00 -->");
+    expect(serialized).toContain("- 归档: 1");
+    expect(serialized).toContain("- 当前状态: 归档");
+    expect(reparsed.archivedCards).toHaveLength(1);
+    expect(reparsed.columns[2].cards).toHaveLength(1);
   });
 
   it("ignores generated task summaries when parsing cards", () => {
@@ -191,5 +234,31 @@ Body without an id comment.
     expect(moved.columns[2].cards[1].columnId).toBe("done");
     expect(moved.columns[2].cards[1].body).toContain("进入已完成");
     expect(moved.columns[2].cards[1].body).toContain("<!-- stage: done -->");
+  });
+
+  it("archives and restores cards with their original column", () => {
+    const board = parseBoardMarkdown(sampleBoard);
+    const archived = archiveCardInBoard(
+      board,
+      "card-20260531-003",
+      "2026-06-02T17:00:00-07:00",
+    );
+
+    expect(archived.columns[1].cards).toHaveLength(0);
+    expect(archived.archivedCards).toHaveLength(1);
+    expect(archived.archivedCards[0]).toMatchObject({
+      id: "card-20260531-003",
+      originalColumnId: "doing",
+      archivedAt: "2026-06-02T17:00:00-07:00",
+    });
+    expect(archived.archivedCards[0].body).toContain("进入归档");
+    expect(archived.archivedCards[0].body).toContain("<!-- stage: archived -->");
+
+    const restored = restoreCardInBoard(archived, "card-20260531-003");
+
+    expect(restored.archivedCards).toHaveLength(0);
+    expect(restored.columns[1].cards).toHaveLength(1);
+    expect(restored.columns[1].cards[0].columnId).toBe("doing");
+    expect(restored.columns[1].cards[0].body).toContain("进入进行中");
   });
 });

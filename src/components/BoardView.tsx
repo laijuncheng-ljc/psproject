@@ -19,6 +19,7 @@ import {
   updateCardCategoryInBoard,
 } from "../utils/board";
 import { parseCardMetadata, stripCardMetadataComments } from "../utils/cardMetadata";
+import { ArchivePanel } from "./ArchivePanel";
 import { KanbanColumn } from "./KanbanColumn";
 
 interface BoardViewProps {
@@ -146,6 +147,10 @@ export function BoardView({
             />
           ))}
         </div>
+        <ArchivePanel
+          archivedCards={board.archivedCards}
+          onCardSelect={onCardSelect}
+        />
       </main>
       <DragOverlay>
         {activeCard ? (

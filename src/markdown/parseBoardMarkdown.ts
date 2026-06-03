@@ -3,7 +3,7 @@ import {
   DEFAULT_COLUMNS,
   createDefaultColumns,
 } from "../constants/columns";
-import type { Board, Card, ColumnId } from "../types/board";
+import type { ArchivedCard, Board, Card, ColumnId } from "../types/board";
 import { generateCardId } from "../utils/id";
 
 const COLUMN_TITLE_TO_ID: Record<string, ColumnId> = {
@@ -16,6 +16,8 @@ const COLUMN_TITLE_TO_ID: Record<string, ColumnId> = {
 };
 
 const ID_COMMENT_PATTERN = /^<!--\s*id:\s*(.+?)\s*-->$/;
+const COLUMN_COMMENT_PATTERN = /^<!--\s*column:\s*(.+?)\s*-->$/;
+const ARCHIVED_AT_COMMENT_PATTERN = /^<!--\s*archived_at:\s*(.+?)\s*-->$/;
 const FENCE_PATTERN = /^ {0,3}(```+|~~~+)/;
 const NOTES_SECTION_TITLES = new Set([
   "notes",
@@ -30,6 +32,7 @@ const SUMMARY_SECTION_TITLES = new Set([
   "当前任务状态",
   "任务状态",
 ]);
+const ARCHIVE_SECTION_TITLES = new Set(["archive", "archived", "归档", "已归档"]);
 
 export function parseBoardMarkdown(markdown: string): Board {
   const normalizedMarkdown = markdown.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -39,21 +42,36 @@ export function parseBoardMarkdown(markdown: string): Board {
       title: DEFAULT_BOARD_TITLE,
       notes: "",
       columns: createDefaultColumns(),
+      archivedCards: [],
     };
   }
 
   const columns = createDefaultColumns();
+  const archivedCards: ArchivedCard[] = [];
   const lines = normalizedMarkdown.split("\n");
   let boardTitle = DEFAULT_BOARD_TITLE;
   const boardNotesLines: string[] = [];
-  let currentBoardSection: "notes" | null = null;
+  let currentBoardSection: "notes" | "archive" | null = null;
   let currentColumnId: ColumnId | null = null;
   let currentCardTitle: string | null = null;
   let currentCardBodyLines: string[] = [];
   let insideFence = false;
 
   const flushCurrentCard = () => {
-    if (!currentColumnId || currentCardTitle === null) {
+    if (currentCardTitle === null) {
+      currentCardTitle = null;
+      currentCardBodyLines = [];
+      return;
+    }
+
+    if (currentBoardSection === "archive") {
+      archivedCards.push(createArchivedCard(currentCardTitle, currentCardBodyLines));
+      currentCardTitle = null;
+      currentCardBodyLines = [];
+      return;
+    }
+
+    if (currentColumnId === null) {
       currentCardTitle = null;
       currentCardBodyLines = [];
       return;
@@ -95,6 +113,12 @@ export function parseBoardMarkdown(markdown: string): Board {
           continue;
         }
 
+        if (isArchiveSectionTitle(normalizedColumnTitle)) {
+          currentBoardSection = "archive";
+          currentColumnId = null;
+          continue;
+        }
+
         if (
           currentBoardSection === "notes" &&
           columnId === null &&
@@ -111,7 +135,7 @@ export function parseBoardMarkdown(markdown: string): Board {
 
       const cardTitleMatch = /^###\s+(.+?)\s*$/.exec(line);
 
-      if (cardTitleMatch && currentColumnId) {
+      if (cardTitleMatch && (currentColumnId || currentBoardSection === "archive")) {
         flushCurrentCard();
         currentCardTitle = cardTitleMatch[1].trim() || "无标题";
         currentCardBodyLines = [];
@@ -139,6 +163,7 @@ export function parseBoardMarkdown(markdown: string): Board {
       ...column,
       cards: columns.find((candidate) => candidate.id === column.id)?.cards ?? [],
     })),
+    archivedCards,
   };
 }
 
@@ -150,12 +175,16 @@ function isSummarySectionTitle(title: string): boolean {
   return SUMMARY_SECTION_TITLES.has(title);
 }
 
+function isArchiveSectionTitle(title: string): boolean {
+  return ARCHIVE_SECTION_TITLES.has(title);
+}
+
 function createCard(
   columnId: ColumnId,
   title: string,
   bodyLines: string[],
 ): Card {
-  const { id, body } = extractCardIdAndBody(bodyLines);
+  const { id, body } = extractCardMetadataAndBody(bodyLines);
 
   return {
     id: id ?? generateCardId(),
@@ -165,21 +194,49 @@ function createCard(
   };
 }
 
-function extractCardIdAndBody(bodyLines: string[]): {
+function createArchivedCard(title: string, bodyLines: string[]): ArchivedCard {
+  const { id, columnId, archivedAt, body } = extractCardMetadataAndBody(bodyLines);
+  const originalColumnId = columnId ?? "todo";
+
+  return {
+    id: id ?? generateCardId(),
+    title,
+    body,
+    columnId: originalColumnId,
+    originalColumnId,
+    archivedAt,
+  };
+}
+
+function extractCardMetadataAndBody(bodyLines: string[]): {
   id: string | null;
+  columnId: ColumnId | null;
+  archivedAt: string | null;
   body: string;
 } {
   let id: string | null = null;
+  let columnId: ColumnId | null = null;
+  let archivedAt: string | null = null;
   let insideFence = false;
-  const linesWithoutId: string[] = [];
+  const bodyContentLines: string[] = [];
 
   for (const line of bodyLines) {
     const idMatch = !insideFence ? ID_COMMENT_PATTERN.exec(line.trim()) : null;
+    const columnMatch = !insideFence
+      ? COLUMN_COMMENT_PATTERN.exec(line.trim())
+      : null;
+    const archivedAtMatch = !insideFence
+      ? ARCHIVED_AT_COMMENT_PATTERN.exec(line.trim())
+      : null;
 
     if (idMatch && id === null) {
       id = idMatch[1].trim();
+    } else if (columnMatch && columnId === null) {
+      columnId = normalizeColumnId(columnMatch[1].trim());
+    } else if (archivedAtMatch && archivedAt === null) {
+      archivedAt = archivedAtMatch[1].trim() || null;
     } else {
-      linesWithoutId.push(line);
+      bodyContentLines.push(line);
     }
 
     if (isFenceLine(line)) {
@@ -189,8 +246,14 @@ function extractCardIdAndBody(bodyLines: string[]): {
 
   return {
     id,
-    body: trimBlankEdges(linesWithoutId).join("\n"),
+    columnId,
+    archivedAt,
+    body: trimBlankEdges(bodyContentLines).join("\n"),
   };
+}
+
+function normalizeColumnId(value: string): ColumnId | null {
+  return COLUMN_TITLE_TO_ID[value.toLowerCase()] ?? null;
 }
 
 function trimBlankEdges(lines: string[]): string[] {

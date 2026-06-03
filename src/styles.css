@@ -309,21 +309,23 @@ textarea {
 }
 
 .board-shell {
-  min-height: calc(100vh - 64px);
-  overflow-x: auto;
+  height: calc(100vh - 64px);
+  overflow: auto;
   padding: 18px;
 }
 
 .board-columns {
   display: grid;
   min-width: 920px;
+  align-items: start;
   grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: 16px;
 }
 
 .kanban-column {
   display: flex;
-  min-height: calc(100vh - 100px);
+  height: min(760px, calc(100vh - 118px));
+  min-height: 0;
   flex-direction: column;
   border: 1px solid #dce2eb;
   border-radius: 8px;
@@ -398,10 +400,32 @@ textarea {
 
 .card-list {
   display: flex;
-  min-height: 120px;
+  min-width: 0;
+  min-height: 0;
   flex: 1;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.card-list::-webkit-scrollbar,
+.archive-card-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-list::-webkit-scrollbar-track,
+.archive-card-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-list::-webkit-scrollbar-thumb,
+.archive-card-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #b9c5d6;
+  background-clip: padding-box;
 }
 
 .card-category-section {
@@ -746,6 +770,7 @@ textarea {
 .editor-actions {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -755,6 +780,75 @@ textarea {
 
 .project-notes-editor textarea {
   min-height: min(560px, calc(100vh - 190px));
+}
+
+.archive-panel {
+  min-width: 920px;
+  margin-top: 16px;
+  border: 1px solid #dce2eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(31 41 55 / 5%);
+}
+
+.archive-panel summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+  padding: 0 14px;
+  user-select: none;
+}
+
+.archive-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.archive-panel summary strong {
+  display: inline-flex;
+  min-width: 28px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #e5ebf3;
+  color: #536176;
+  font-size: 12px;
+}
+
+.archive-card-list {
+  display: grid;
+  max-height: 360px;
+  gap: 10px;
+  overflow-y: auto;
+  border-top: 1px solid #edf1f6;
+  padding: 12px;
+}
+
+.archive-card-shell {
+  display: grid;
+  gap: 6px;
+}
+
+.archive-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #68758a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.archive-empty {
+  margin: 0;
+  border-top: 1px solid #edf1f6;
+  color: #7a8798;
+  font-weight: 700;
+  padding: 16px;
 }
 
 .subitem-progress {
@@ -964,12 +1058,17 @@ textarea {
   }
 
   .board-shell {
-    min-height: calc(100vh - 106px);
+    height: calc(100vh - 106px);
     padding: 12px;
   }
 
-  .board-columns {
+  .board-columns,
+  .archive-panel {
     min-width: 860px;
+  }
+
+  .kanban-column {
+    height: calc(100vh - 154px);
   }
 
   .card-editor {
