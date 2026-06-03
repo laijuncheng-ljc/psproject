@@ -421,7 +421,9 @@ textarea {
   bottom: -13px;
   width: 126px;
   height: 126px;
-  animation: worker-bob 900ms ease-in-out infinite;
+  animation: lobster-mining-strike 1150ms cubic-bezier(0.42, 0, 0.28, 1) infinite;
+  transform-origin: 56% 86%;
+  will-change: transform;
 }
 
 .digging-worker img {
@@ -433,6 +435,113 @@ textarea {
     drop-shadow(0 0 10px rgb(0 229 255 / 30%))
     drop-shadow(0 8px 14px rgb(0 0 0 / 42%));
   transform: translateZ(0);
+}
+
+.digging-impact {
+  position: absolute;
+  right: calc(28% + 7px);
+  bottom: 26px;
+  width: 44px;
+  height: 28px;
+  pointer-events: none;
+}
+
+.digging-impact::before {
+  position: absolute;
+  right: 3px;
+  bottom: 0;
+  width: 36px;
+  height: 14px;
+  border: 1px solid rgb(72 236 255 / 72%);
+  border-radius: 50%;
+  background: rgb(72 236 255 / 14%);
+  box-shadow: 0 0 18px rgb(72 236 255 / 36%);
+  content: "";
+  animation: impact-ring 1150ms ease-out infinite;
+}
+
+.digging-impact span {
+  position: absolute;
+  bottom: 8px;
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: #7df7ff;
+  box-shadow: 0 0 10px rgb(72 236 255 / 60%);
+  transform-origin: bottom;
+  animation: impact-spark 1150ms ease-out infinite;
+  --spark-angle: 0deg;
+}
+
+.digging-impact span:nth-child(1) {
+  right: 6px;
+  --spark-angle: -42deg;
+}
+
+.digging-impact span:nth-child(2) {
+  right: 18px;
+  animation-delay: 40ms;
+}
+
+.digging-impact span:nth-child(3) {
+  right: 30px;
+  --spark-angle: 42deg;
+  animation-delay: 80ms;
+}
+
+.digging-debris {
+  position: absolute;
+  right: calc(28% + 8px);
+  bottom: 28px;
+  width: 70px;
+  height: 42px;
+  pointer-events: none;
+}
+
+.digging-debris span {
+  position: absolute;
+  bottom: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffca67;
+  box-shadow: 0 0 8px rgb(255 202 103 / 40%);
+  opacity: 0;
+  animation: debris-fly 1150ms ease-out infinite;
+}
+
+.digging-debris span:nth-child(1) {
+  left: 6px;
+  --debris-x: -24px;
+  --debris-y: -24px;
+}
+
+.digging-debris span:nth-child(2) {
+  left: 20px;
+  --debris-x: -12px;
+  --debris-y: -34px;
+  animation-delay: 30ms;
+}
+
+.digging-debris span:nth-child(3) {
+  left: 34px;
+  --debris-x: 8px;
+  --debris-y: -28px;
+  animation-delay: 70ms;
+}
+
+.digging-debris span:nth-child(4) {
+  left: 48px;
+  --debris-x: 22px;
+  --debris-y: -18px;
+  animation-delay: 110ms;
+}
+
+.digging-debris span:nth-child(5) {
+  left: 58px;
+  --debris-x: 32px;
+  --debris-y: -30px;
+  animation-delay: 140ms;
 }
 
 .digging-chip {
@@ -452,14 +561,97 @@ textarea {
   font-weight: 850;
 }
 
-@keyframes worker-bob {
-  0%,
+@keyframes lobster-mining-strike {
+  0% {
+    transform: translateY(0) rotate(-5deg) scale(1);
+  }
+
+  24% {
+    transform: translate(-3px, -8px) rotate(-14deg) scale(1.02);
+  }
+
+  46% {
+    transform: translate(7px, 7px) rotate(11deg) scale(0.98);
+  }
+
+  54% {
+    transform: translate(5px, 3px) rotate(7deg) scale(1);
+  }
+
+  78% {
+    transform: translate(-2px, -5px) rotate(-9deg) scale(1.01);
+  }
+
   100% {
-    transform: translateY(0);
+    transform: translateY(0) rotate(-5deg) scale(1);
+  }
+}
+
+@keyframes impact-ring {
+  0%,
+  38% {
+    opacity: 0;
+    transform: scale(0.56);
+  }
+
+  47% {
+    opacity: 1;
+    transform: scale(0.86);
+  }
+
+  72% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+@keyframes impact-spark {
+  0%,
+  40% {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateY(0) scaleY(0.2);
+  }
+
+  48% {
+    opacity: 1;
+    transform: rotate(var(--spark-angle)) translateY(-8px) scaleY(1);
+  }
+
+  66% {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateY(-18px) scaleY(0.25);
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateY(-18px) scaleY(0.25);
+  }
+}
+
+@keyframes debris-fly {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.8);
   }
 
   50% {
-    transform: translateY(3px);
+    opacity: 1;
+  }
+
+  72% {
+    opacity: 0;
+    transform: translate(var(--debris-x), var(--debris-y)) scale(0.45);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--debris-x), var(--debris-y)) scale(0.45);
   }
 }
 
