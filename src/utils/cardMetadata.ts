@@ -2,6 +2,7 @@ export interface CardMetadata {
   category: string;
   priority: string | null;
   tags: string[];
+  detailPath: string;
 }
 
 export type CardCategoryTone = "long-term" | "focused" | "urgent" | "custom" | "none";
@@ -25,13 +26,14 @@ export const CARD_CATEGORY_GROUPS: Array<{
 ];
 
 const METADATA_COMMENT_PATTERN =
-  /^<!--\s*(category|priority|tags):\s*(.*?)\s*-->$/i;
+  /^<!--\s*(category|priority|tags|detail|detail_path|detail-file|detail_file):\s*(.*?)\s*-->$/i;
 const FENCE_PATTERN = /^ {0,3}(```+|~~~+)/;
 
 export function parseCardMetadata(body: string): CardMetadata {
   let category = "";
   let priority: string | null = null;
   let tags: string[] = [];
+  let detailPath = "";
   let insideFence = false;
 
   for (const line of body.split("\n")) {
@@ -49,6 +51,13 @@ export function parseCardMetadata(body: string): CardMetadata {
         priority = value || null;
       } else if (key === "tags") {
         tags = parseTags(value);
+      } else if (
+        key === "detail" ||
+        key === "detail_path" ||
+        key === "detail-file" ||
+        key === "detail_file"
+      ) {
+        detailPath = value;
       }
     }
 
@@ -57,7 +66,7 @@ export function parseCardMetadata(body: string): CardMetadata {
     }
   }
 
-  return { category, priority, tags };
+  return { category, priority, tags, detailPath };
 }
 
 export function serializeCardMetadata(
@@ -68,6 +77,7 @@ export function serializeCardMetadata(
   const cleanPriority = metadata.priority?.trim();
   const cleanTags = metadata.tags.map((tag) => tag.trim()).filter(Boolean);
   const cleanCategory = metadata.category.trim();
+  const cleanDetailPath = metadata.detailPath.trim();
   const cleanBody = stripCardMetadataComments(body);
 
   if (cleanCategory) {
@@ -80,6 +90,10 @@ export function serializeCardMetadata(
 
   if (cleanTags.length > 0) {
     metadataLines.push(`<!-- tags: ${cleanTags.join(", ")} -->`);
+  }
+
+  if (cleanDetailPath) {
+    metadataLines.push(`<!-- detail: ${cleanDetailPath} -->`);
   }
 
   if (metadataLines.length === 0) {

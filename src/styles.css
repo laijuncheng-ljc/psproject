@@ -642,6 +642,7 @@ textarea {
 }
 
 .priority-chip,
+.detail-chip,
 .tag-chip {
   display: inline-flex;
   width: fit-content;
@@ -655,6 +656,11 @@ textarea {
 .priority-chip {
   background: #fff4de;
   color: #835000;
+}
+
+.detail-chip {
+  background: #ecfdf3;
+  color: #127150;
 }
 
 .priority-high {
@@ -765,6 +771,65 @@ textarea {
 
 .editor-body-field textarea {
   min-height: 160px;
+}
+
+.detail-document-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dce3ee;
+  border-radius: 8px;
+  background: #f7fbf9;
+  padding: 12px;
+}
+
+.detail-document-header {
+  display: grid;
+  gap: 5px;
+}
+
+.detail-document-header h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.detail-document-header span {
+  overflow-wrap: anywhere;
+  color: #536176;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.detail-document-panel textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.detail-document-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-document-actions span {
+  color: #607086;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.detail-document-create {
+  justify-content: center;
+  border-style: dashed;
+  background: #ffffff;
+}
+
+.detail-document-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .editor-actions {

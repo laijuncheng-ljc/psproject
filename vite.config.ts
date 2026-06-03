@@ -9,8 +9,10 @@ import react from "@vitejs/plugin-react";
 const BOARD_FILE_NAME = "board.md";
 const EXAMPLE_FILE_NAME = "example-board.md";
 const BACKUP_DIR_NAME = "backups";
+const CARD_DETAIL_DIR_NAME = "card-details";
 const BOARD_API_PATH = "/api/board";
 const BACKUPS_API_PATH = "/api/board/backups";
+const CARD_DETAIL_API_PATH = "/api/card-detail";
 const MAX_REQUEST_BYTES = 5 * 1024 * 1024;
 
 interface BackupSnapshot {
@@ -100,6 +102,50 @@ function localBoardFilePlugin(): Plugin {
         const backup = await writeBackup(backupDirectoryPath, content);
 
         return { backup };
+      });
+      return;
+    }
+
+    if (url.pathname === CARD_DETAIL_API_PATH && request.method === "GET") {
+      await respond(response, async () => {
+        const detailPath = normalizeCardDetailPath(url.searchParams.get("path"));
+        const detailFilePath = path.join(root, detailPath);
+
+        try {
+          return {
+            path: detailPath,
+            content: await readFile(detailFilePath, "utf8"),
+            exists: true,
+          };
+        } catch (error) {
+          if (!hasCode(error, "ENOENT")) {
+            throw error;
+          }
+
+          return {
+            path: detailPath,
+            content: "",
+            exists: false,
+          };
+        }
+      });
+      return;
+    }
+
+    if (url.pathname === CARD_DETAIL_API_PATH && request.method === "PUT") {
+      await respond(response, async () => {
+        const body = await readJsonBody(request);
+        const detailPath = normalizeCardDetailPath(getPathFromBody(body));
+        const content = getContentFromBody(body);
+        const detailFilePath = path.join(root, detailPath);
+
+        await mkdir(path.dirname(detailFilePath), { recursive: true });
+        await writeFile(detailFilePath, content, "utf8");
+
+        return {
+          path: detailPath,
+          savedAt: new Date().toISOString(),
+        };
       });
       return;
     }
@@ -235,6 +281,45 @@ function getContentFromBody(body: unknown): string {
   }
 
   return content;
+}
+
+function getPathFromBody(body: unknown): string {
+  if (typeof body !== "object" || body === null || !("path" in body)) {
+    throw new ApiError(400, "缺少 Markdown 文件路径。");
+  }
+
+  const filePath = (body as { path?: unknown }).path;
+
+  if (typeof filePath !== "string") {
+    throw new ApiError(400, "Markdown 文件路径格式不正确。");
+  }
+
+  return filePath;
+}
+
+function normalizeCardDetailPath(rawPath: string | null): string {
+  const cleanPath = (rawPath ?? "").trim().replace(/\\/g, "/");
+
+  if (!cleanPath) {
+    throw new ApiError(400, "缺少专项文档路径。");
+  }
+
+  const normalizedPath = path.posix.normalize(cleanPath);
+  const detailPath = normalizedPath.startsWith(`${CARD_DETAIL_DIR_NAME}/`)
+    ? normalizedPath
+    : `${CARD_DETAIL_DIR_NAME}/${normalizedPath}`;
+  const segments = detailPath.split("/");
+
+  if (
+    segments[0] !== CARD_DETAIL_DIR_NAME ||
+    segments.some((segment) => segment === "" || segment === "." || segment === "..") ||
+    path.posix.isAbsolute(detailPath) ||
+    !detailPath.endsWith(".md")
+  ) {
+    throw new ApiError(400, "专项文档必须放在 card-details/ 目录下，并使用 .md 后缀。");
+  }
+
+  return segments.join("/");
 }
 
 async function respond(

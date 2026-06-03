@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import {
+  loadCardDetailFile,
+  saveCardDetailFile,
+} from "../storage/fixedMarkdownFile";
 import type { Card } from "../types/board";
 import {
   CARD_CATEGORY_OPTIONS,
@@ -70,6 +74,12 @@ function CardEditorForm({
   const cardMetadata = parseCardMetadata(parsedTimeManagement.body);
   const [title, setTitle] = useState(card.title);
   const [category, setCategory] = useState(cardMetadata.category);
+  const [detailPath, setDetailPath] = useState(cardMetadata.detailPath);
+  const [detailContent, setDetailContent] = useState("");
+  const [savedDetailContent, setSavedDetailContent] = useState("");
+  const [detailStatus, setDetailStatus] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [isDetailSaving, setIsDetailSaving] = useState(false);
   const [body, setBody] = useState(
     stripCardMetadataComments(parsedTimeManagement.body),
   );
@@ -82,9 +92,52 @@ function CardEditorForm({
     ? CARD_CATEGORY_OPTIONS
     : [...CARD_CATEGORY_OPTIONS, { value: category, label: category }];
 
-  function buildCardUpdates(): Pick<Card, "title" | "body"> {
+  useEffect(() => {
+    const cleanDetailPath = detailPath.trim();
+
+    if (!cleanDetailPath) {
+      return;
+    }
+
+    let isCurrent = true;
+
+    async function loadDetailDocument() {
+      try {
+        const file = await loadCardDetailFile(cleanDetailPath);
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setDetailContent(file.content);
+        setSavedDetailContent(file.content);
+        setDetailStatus(file.exists ? "已加载专项文档" : "专项文档待创建");
+        setDetailError(null);
+      } catch (caughtError) {
+        if (!isCurrent) {
+          return;
+        }
+
+        setDetailError(toErrorMessage(caughtError, "读取专项文档失败。"));
+      }
+    }
+
+    void loadDetailDocument();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [detailPath]);
+
+  function buildCardUpdates(
+    overrides: { detailPath?: string } = {},
+  ): Pick<Card, "title" | "body"> {
     const bodyWithMetadata = serializeCardMetadata(
-      { ...cardMetadata, category },
+      {
+        ...cardMetadata,
+        category,
+        detailPath: overrides.detailPath ?? detailPath,
+      },
       body,
     );
 
@@ -98,7 +151,11 @@ function CardEditorForm({
     };
   }
 
-  function commitAndClose() {
+  async function commitAndClose() {
+    if (!(await saveDetailIfNeeded())) {
+      return;
+    }
+
     onSave(card.id, buildCardUpdates());
     onClose();
   }
@@ -109,14 +166,78 @@ function CardEditorForm({
     }
   }
 
-  function handleArchive() {
+  async function handleArchive() {
+    if (!(await saveDetailIfNeeded())) {
+      return;
+    }
+
     onArchive(card.id, buildCardUpdates());
     onClose();
   }
 
-  function handleRestore() {
+  async function handleRestore() {
+    if (!(await saveDetailIfNeeded())) {
+      return;
+    }
+
     onRestore(card.id, buildCardUpdates());
     onClose();
+  }
+
+  async function handleCreateDetailDocument() {
+    const nextDetailPath = createDetailPath(card);
+    const nextDetailContent = createDefaultDetailContent(title || card.title);
+
+    setDetailPath(nextDetailPath);
+    setDetailContent(nextDetailContent);
+    setSavedDetailContent("");
+    setDetailStatus("正在保存专项文档");
+    setDetailError(null);
+
+    try {
+      setIsDetailSaving(true);
+      await saveCardDetailFile(nextDetailPath, nextDetailContent);
+      setSavedDetailContent(nextDetailContent);
+      setDetailStatus("已保存专项文档");
+      onSave(card.id, buildCardUpdates({ detailPath: nextDetailPath }));
+    } catch (caughtError) {
+      setDetailError(toErrorMessage(caughtError, "创建专项文档失败。"));
+    } finally {
+      setIsDetailSaving(false);
+    }
+  }
+
+  async function handleSaveDetailDocument() {
+    await saveDetailIfNeeded(true);
+  }
+
+  async function saveDetailIfNeeded(force = false): Promise<boolean> {
+    const cleanDetailPath = detailPath.trim();
+
+    if (!cleanDetailPath) {
+      return true;
+    }
+
+    if (!force && detailContent === savedDetailContent) {
+      return true;
+    }
+
+    setDetailError(null);
+    setDetailStatus("正在保存专项文档");
+
+    try {
+      setIsDetailSaving(true);
+      await saveCardDetailFile(cleanDetailPath, detailContent);
+      setSavedDetailContent(detailContent);
+      setDetailStatus("已保存专项文档");
+      return true;
+    } catch (caughtError) {
+      setDetailStatus("专项文档保存失败");
+      setDetailError(toErrorMessage(caughtError, "保存专项文档失败。"));
+      return false;
+    } finally {
+      setIsDetailSaving(false);
+    }
   }
 
   function handleItemToggle(itemId: string, completed: boolean) {
@@ -190,6 +311,41 @@ function CardEditorForm({
         <span>正文</span>
         <textarea value={body} onChange={(event) => setBody(event.target.value)} />
       </label>
+      <section className="detail-document-panel">
+        <div className="detail-document-header">
+          <h3>专项文档</h3>
+          {detailPath.trim() ? <span>{detailPath}</span> : null}
+        </div>
+        {detailPath.trim() ? (
+          <>
+            <textarea
+              value={detailContent}
+              onChange={(event) => setDetailContent(event.target.value)}
+              aria-label="专项文档正文"
+            />
+            <div className="detail-document-actions">
+              {detailStatus ? <span>{detailStatus}</span> : null}
+              <button
+                type="button"
+                onClick={() => void handleSaveDetailDocument()}
+                disabled={isDetailSaving}
+              >
+                {isDetailSaving ? "保存中" : "保存专项文档"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="detail-document-create"
+            onClick={() => void handleCreateDetailDocument()}
+            disabled={isDetailSaving}
+          >
+            创建专项文档
+          </button>
+        )}
+        {detailError ? <p className="detail-document-error">{detailError}</p> : null}
+      </section>
       <section className="time-management-panel">
         <div className="time-management-header">
           <h3>时间管理</h3>
@@ -273,6 +429,52 @@ function getStageLabel(stage: StageHistoryEntry["stage"]): string {
   if (stage === "doing") return "进行中";
   if (stage === "done") return "已完成";
   return "归档";
+}
+
+function createDetailPath(card: Card): string {
+  const titleSlug = slugify(card.title);
+
+  return `card-details/${titleSlug || card.id}.md`;
+}
+
+function createDefaultDetailContent(title: string): string {
+  const cleanTitle = title.trim() || "专项文档";
+
+  return `# ${cleanTitle}
+
+## 目标
+
+
+## 数据范围
+
+
+## 字段与口径
+
+| 字段 | 含义 | 来源 | 口径 | 负责人 | 状态 |
+| --- | --- | --- | --- | --- | --- |
+
+## 数据来源
+
+
+## 交付物
+
+
+## 确认记录
+
+- ${formatLocalTimestamp()} 创建专项文档
+`;
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function toErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 interface TimeManagementRowProps {

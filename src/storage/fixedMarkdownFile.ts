@@ -22,8 +22,20 @@ export interface CreateBackupResult {
   backup: BackupSnapshot;
 }
 
+export interface CardDetailFile {
+  path: string;
+  content: string;
+  exists: boolean;
+}
+
+export interface SaveCardDetailFileResult {
+  path: string;
+  savedAt: string;
+}
+
 const BOARD_API_PATH = "/api/board";
 const BACKUPS_API_PATH = "/api/board/backups";
+const CARD_DETAIL_API_PATH = "/api/card-detail";
 
 export async function loadFixedMarkdownFile(): Promise<FixedMarkdownFile> {
   return requestJson<FixedMarkdownFile>(BOARD_API_PATH);
@@ -49,6 +61,22 @@ export async function createFixedMarkdownBackup(
 
 export async function listFixedMarkdownBackups(): Promise<BackupSnapshot[]> {
   return requestJson<BackupSnapshot[]>(BACKUPS_API_PATH);
+}
+
+export async function loadCardDetailFile(path: string): Promise<CardDetailFile> {
+  const query = new URLSearchParams({ path });
+
+  return requestJson<CardDetailFile>(`${CARD_DETAIL_API_PATH}?${query.toString()}`);
+}
+
+export async function saveCardDetailFile(
+  path: string,
+  content: string,
+): Promise<SaveCardDetailFileResult> {
+  return requestJson<SaveCardDetailFileResult>(CARD_DETAIL_API_PATH, {
+    method: "PUT",
+    body: JSON.stringify({ path, content }),
+  });
 }
 
 async function requestJson<T>(

@@ -98,10 +98,17 @@ function KanbanCardContent({ card }: { card: Card }) {
       ) : (
         <span className="card-preview card-preview-empty">无正文</span>
       )}
-      {metadata.category || priority || visibleTags.length > 0 || totalItems > 0 ? (
+      {metadata.category ||
+      metadata.detailPath ||
+      priority ||
+      visibleTags.length > 0 ||
+      totalItems > 0 ? (
         <span className="card-meta-row">
           {metadata.category ? (
             <span className="category-chip">{metadata.category}</span>
+          ) : null}
+          {metadata.detailPath ? (
+            <span className="detail-chip">专项文档</span>
           ) : null}
           {priority ? (
             <span className={`priority-chip priority-${priority}`}>
