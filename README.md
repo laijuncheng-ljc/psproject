@@ -8,7 +8,7 @@
 - 自动解析为“待办 / 进行中 / 已完成”三列
 - 拖拽卡片调整顺序或状态
 - 卡片变多时，各状态列和归档列表会独立滚动
-- 完成任务会累积能量、土地、领地、机械合金、数据核心和成就
+- 完成任务后顶部会显示一个轻量的小人挖坑动画
 - 新建、编辑、删除卡片
 - 给整个项目记录备注，并同步到 `project-data/notes.md`
 - 给卡片设置分类、标签、优先级和归档状态
@@ -17,7 +17,7 @@
 - 在卡片里管理“时间管理”子项目，并在勾选完成时记录本地时间戳
 - 自动记录卡片进入待办、进行中、已完成和归档的时间点
 - 保存时自动生成“当前任务状态”，方便大模型读取所有任务的当前情况
-- 保存时同步刷新 `project-data/resources.md` 和 `project-data/achievements.md`
+- 保存时同步刷新 `project-data/resources.md` 和 `project-data/achievements.md` 里的挖坑记录
 - 修改后自动覆盖写回 `project-data/board.md`，也可以点“立即保存”手动触发
 - 可选开启每 2 小时自动备份，备份文件会写入 `project-data/backups/`
 - 没有远程后端、数据库、账号系统或 GitHub 同步
@@ -28,20 +28,18 @@
 
 - `project-data/board.md`: 看板主数据、任务状态、时间节点和当前状态总览。
 - `project-data/notes.md`: 项目整体备注。
-- `project-data/resources.md`: 由完成卡片和子项目自动计算出的资源进度。
-- `project-data/achievements.md`: 自动生成的成就记录。
+- `project-data/resources.md`: 由完成卡片和子项目自动计算出的挖坑进度。
+- `project-data/achievements.md`: 自动生成的挖坑记录。
 - `project-data/details/*.md`: 专项长文档，例如数据需求、字段口径、方案细节。
 - `project-data/backups/`: 自动备份目录，默认不提交到 Git。
 
 旧版本的根目录 `board.md` 和 `card-details/` 会在启动时自动迁移/兼容到 `project-data/`。
 
-## 资源规则
+## 挖坑规则
 
-- 每完成 1 张任务卡片，获得 120 能量和 1 块土地。
-- 每完成 3 张任务卡片，自动合成为 1 个领地。
-- 每完成 1 个子项目，获得 20 能量和 8 机械合金。
-- 每绑定 1 个专项文档，获得 1 个数据核心。
-- 每归档 1 张卡片，获得 30 能量。
+- 每完成 1 张任务卡片，小人多挖 1 层。
+- 每完成 1 个子项目，小人多挖 1 层。
+- 顶部只保留小型挖坑动画，不再展示大资源面板。
 
 ## 推荐用法
 

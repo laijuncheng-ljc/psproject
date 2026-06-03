@@ -14,6 +14,7 @@ export interface ResourceModel {
   territory: number;
   alloy: number;
   dataCores: number;
+  digDepth: number;
   nextLandTarget: number;
   nextTerritoryTarget: number;
   achievements: Achievement[];
@@ -49,6 +50,7 @@ export function calculateResourceModel(board: Board): ResourceModel {
   const territory = Math.floor(completedCards / 3);
   const alloy = completedSubitems * 8;
   const dataCores = detailDocuments;
+  const digDepth = completedCards + completedSubitems;
 
   return {
     completedCards,
@@ -62,13 +64,14 @@ export function calculateResourceModel(board: Board): ResourceModel {
     territory,
     alloy,
     dataCores,
+    digDepth,
     nextLandTarget: completedCards + 1,
     nextTerritoryTarget: (territory + 1) * 3,
     achievements: createAchievements({
       completedCards,
       completedSubitems,
       detailDocuments,
-      energy,
+      digDepth,
     }),
   };
 }
@@ -77,30 +80,20 @@ export function serializeResourcesMarkdown(board: Board): string {
   const model = calculateResourceModel(board);
 
   return [
-    "# 资源进度",
+    "# 挖坑进度",
     "",
-    "这份文件由看板保存时自动生成，给人和大模型快速读取项目成长状态。",
+    "这份文件由看板保存时自动生成，给人和大模型快速读取任务推进状态。",
     "",
-    "## 当前资源",
+    "## 当前进度",
     "",
-    `- 能量: ${model.energy}`,
-    `- 土地: ${model.land}`,
-    `- 领地: ${model.territory}`,
-    `- 机械合金: ${model.alloy}`,
-    `- 数据核心: ${model.dataCores}`,
+    `- 已挖层数: ${model.digDepth}`,
+    `- 已完成卡片: ${model.completedCards}`,
+    `- 已完成子项目: ${model.completedSubitems}`,
     "",
     "## 规则",
     "",
-    "- 每完成 1 张任务卡片，获得 120 能量和 1 块土地。",
-    "- 每完成 3 张任务卡片，自动合成为 1 个领地。",
-    "- 每完成 1 个子项目，获得 20 能量和 8 机械合金。",
-    "- 每绑定 1 个专项文档，获得 1 个数据核心。",
-    "- 每归档 1 张卡片，获得 30 能量。",
-    "",
-    "## 下一目标",
-    "",
-    `- 下一块土地: 完成 ${model.nextLandTarget} 张任务卡片。`,
-    `- 下一块领地: 完成 ${model.nextTerritoryTarget} 张任务卡片。`,
+    "- 每完成 1 张任务卡片，小人多挖 1 层。",
+    "- 每完成 1 个子项目，小人多挖 1 层。",
     "",
     "## 任务统计",
     "",
@@ -119,17 +112,18 @@ export function serializeAchievementsMarkdown(board: Board): string {
   const locked = model.achievements.filter((achievement) => !achievement.unlocked);
 
   return [
-    "# 成就记录",
+    "# 挖坑记录",
     "",
     "这份文件由看板保存时自动生成。",
     "",
-    `- 已解锁: ${unlocked.length}/${model.achievements.length}`,
+    `- 已挖层数: ${model.digDepth}`,
+    `- 已触发记录: ${unlocked.length}/${model.achievements.length}`,
     "",
-    "## 已解锁",
+    "## 已触发",
     "",
     ...serializeAchievementList(unlocked),
     "",
-    "## 未解锁",
+    "## 待触发",
     "",
     ...serializeAchievementList(locked),
     "",
@@ -148,47 +142,47 @@ function createAchievements({
   completedCards,
   completedSubitems,
   detailDocuments,
-  energy,
+  digDepth,
 }: Pick<
   ResourceModel,
-  "completedCards" | "completedSubitems" | "detailDocuments" | "energy"
+  "completedCards" | "completedSubitems" | "detailDocuments" | "digDepth"
 >): Achievement[] {
   return [
     {
-      id: "first-power-cell",
-      title: "第一枚能量核心",
-      description: "完成 1 张任务卡片。",
+      id: "first-shovel",
+      title: "第一铲",
+      description: "完成 1 张任务卡片，小人开始挖坑。",
       unlocked: completedCards >= 1,
     },
     {
-      id: "territory-node",
-      title: "领地节点",
-      description: "完成 3 张任务卡片，合成第一块领地。",
-      unlocked: completedCards >= 3,
+      id: "steady-digging",
+      title: "稳定下挖",
+      description: "累计挖到 3 层。",
+      unlocked: digDepth >= 3,
     },
     {
-      id: "mechanical-grid",
-      title: "机械地网",
-      description: "完成 5 张任务卡片。",
-      unlocked: completedCards >= 5,
+      id: "deep-pit",
+      title: "深坑成型",
+      description: "累计挖到 8 层。",
+      unlocked: digDepth >= 8,
     },
     {
-      id: "data-core-online",
-      title: "数据核心上线",
+      id: "project-shaft",
+      title: "专项竖井",
       description: "绑定至少 1 份专项文档。",
       unlocked: detailDocuments >= 1,
     },
     {
-      id: "subsystem-calibration",
-      title: "子系统校准",
-      description: "完成 5 个子项目。",
-      unlocked: completedSubitems >= 5,
+      id: "card-tunnel",
+      title: "任务隧道",
+      description: "完成 3 张任务卡片。",
+      unlocked: completedCards >= 3,
     },
     {
-      id: "reactor-overdrive",
-      title: "反应堆过载",
-      description: "累积 600 能量。",
-      unlocked: energy >= 600,
+      id: "subsystem-calibration",
+      title: "碎土清理",
+      description: "完成 5 个子项目。",
+      unlocked: completedSubitems >= 5,
     },
   ];
 }

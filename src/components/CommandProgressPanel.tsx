@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Board } from "../types/board";
 import { calculateResourceModel } from "../utils/gamification";
 
@@ -7,70 +8,34 @@ interface CommandProgressPanelProps {
 
 export function CommandProgressPanel({ board }: CommandProgressPanelProps) {
   const model = calculateResourceModel(board);
-  const unlockedAchievements = model.achievements.filter(
-    (achievement) => achievement.unlocked,
-  );
-  const nextAchievement = model.achievements.find(
-    (achievement) => !achievement.unlocked,
-  );
-  const territoryProgress =
-    model.nextTerritoryTarget > 0
-      ? Math.min(100, (model.completedCards / model.nextTerritoryTarget) * 100)
-      : 0;
+  const diggingStyle = {
+    "--dig-depth": `${Math.min(82, 18 + model.digDepth * 8)}px`,
+  } as CSSProperties;
 
   return (
-    <section className="command-progress-panel" aria-label="资源进度">
-      <div className="command-hero">
-        <div className="command-hero-copy">
-          <span className="command-kicker">MECHANICAL COMMAND GRID</span>
-          <h2>任务完成会点亮能量、土地和领地</h2>
-          <p>
-            每完成卡片都会累积资源；保存时会同步写入
-            project-data/resources.md 和 achievements.md。
-          </p>
+    <section
+      className="command-progress-panel digging-progress-panel"
+      aria-label={`挖坑进度，已挖 ${model.digDepth} 层`}
+      style={diggingStyle}
+    >
+      <div className="digging-scene" aria-hidden="true">
+        <div className="digging-ground">
+          <span />
+          <span />
+          <span />
         </div>
-        <div className="reactor-core" aria-hidden="true">
-          <span>{model.energy}</span>
-          <strong>能量</strong>
+        <div className="digging-pit">
+          <span />
         </div>
-      </div>
-      <div className="resource-grid">
-        <ResourceTile label="土地" value={model.land} unit="块" />
-        <ResourceTile label="领地" value={model.territory} unit="域" />
-        <ResourceTile label="机械合金" value={model.alloy} unit="份" />
-        <ResourceTile label="数据核心" value={model.dataCores} unit="枚" />
-      </div>
-      <div className="progress-track-panel">
-        <div className="progress-track-header">
-          <span>下一块领地</span>
-          <strong>
-            {model.completedCards}/{model.nextTerritoryTarget}
-          </strong>
+        <div className="digging-worker">
+          <span className="worker-head" />
+          <span className="worker-body" />
+          <span className="worker-arm" />
+          <span className="worker-leg" />
+          <span className="worker-shovel" />
         </div>
-        <div className="progress-track" aria-hidden="true">
-          <span style={{ width: `${territoryProgress}%` }} />
-        </div>
-        <p>
-          已解锁 {unlockedAchievements.length}/{model.achievements.length} 项成就
-          {nextAchievement ? `，下一项：${nextAchievement.title}` : "，全部成就已点亮"}
-        </p>
+        <span className="digging-chip">{model.digDepth}</span>
       </div>
     </section>
-  );
-}
-
-interface ResourceTileProps {
-  label: string;
-  value: number;
-  unit: string;
-}
-
-function ResourceTile({ label, value, unit }: ResourceTileProps) {
-  return (
-    <div className="resource-tile">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <em>{unit}</em>
-    </div>
   );
 }

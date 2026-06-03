@@ -7,8 +7,8 @@
 
 - 更新时间: 2026-06-02T19:06:18-07:00
 - 数据文件夹: project-data/
-- 资源进度: project-data/resources.md
-- 成就记录: project-data/achievements.md
+- 挖坑进度: project-data/resources.md
+- 挖坑记录: project-data/achievements.md
 - 任务总数: 5
 - 待办: 3
 - 进行中: 1
